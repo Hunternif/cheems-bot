@@ -1,12 +1,12 @@
 import logging
 
-import config
+import cheems.config as config
 from discord.ext import commands
 from discord.ext.commands.context import Context as DiscordContext
 from cheems.discord_helper import extract_target
 
 # Initialize Bot and Denote The Command Prefix
-bot = commands.Bot(command_prefix=".")
+bot = commands.Bot(command_prefix='.')
 logger = logging.getLogger('cheems')
 
 

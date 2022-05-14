@@ -12,9 +12,11 @@ def extract_target(ctx: DiscordContext) -> Optional[Target]:
     """
     server = Server(id=ctx.guild.id, name=ctx.guild.name)
     msg = ctx.message
-    if len(msg.mentions) > 0:
-        d_user = msg.mentions[0]
-        return User(id=d_user.id, name=d_user.name, discriminator=d_user.discriminator, server=server)
+    for m in msg.mentions:
+        if m.id == ctx.me.id:
+            # don't target itself
+            continue
+        return User(id=m.id, name=m.name, discriminator=m.discriminator, server=server)
 
     if len(msg.channel_mentions) > 0:
         d_channel = msg.channel_mentions[0]
