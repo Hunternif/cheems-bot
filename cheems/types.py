@@ -4,9 +4,16 @@ from attr import define
 # Domain classes for modelling Discord interactions
 
 @define
+class Server:
+    id: int
+    name: str
+
+
+@define
 class Target:
     id: int
     name: str
+    server: Server
 
 
 @define
