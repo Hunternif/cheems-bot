@@ -1,13 +1,14 @@
 import logging
 
+from discord.ext.commands import Context
+
 import cheems.config as config
 from discord.ext import commands
-from discord.ext.commands.context import Context as DiscordContext
-from cheems.discord_helper import extract_target
+from cheems.text_gen_cog import TextGenCog
 
-# Initialize Bot and Denote The Command Prefix
-bot = commands.Bot(command_prefix='.')
 logger = logging.getLogger('cheems')
+bot = commands.Bot(command_prefix='.')
+bot.add_cog(TextGenCog(bot))
 
 
 # Runs when Bot Successfully Connects
@@ -16,16 +17,11 @@ async def on_ready():
     logger.info(f'{bot.user} successfully logged in!')
 
 
-@bot.command()
-async def che(ctx: DiscordContext):
-    target = extract_target(ctx)
-    logger.info(f'cheemsburger {target}')
-
-
 @bot.event
-async def on_command_error(ctx, error):
+async def on_command_error(ctx: Context, error):
     # don't log errors for commands from other bots
-    pass
+    if ctx.cog is not None:
+        logger.exception(f'{ctx.cog.qualified_name} error')
 
 
 try:
