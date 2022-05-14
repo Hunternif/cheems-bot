@@ -1,11 +1,9 @@
-from typing import Optional
-
 from discord.ext.commands.context import Context as DiscordContext
 
 from cheems.types import Server, Target, User, Channel
 
 
-def extract_target(ctx: DiscordContext) -> Optional[Target]:
+def extract_target(ctx: DiscordContext) -> Target:
     """
     Returns the first applicable target from the Discord message.
     E.g. if it's a mentioned @user or #channel, returns that user or channel.
@@ -22,4 +20,4 @@ def extract_target(ctx: DiscordContext) -> Optional[Target]:
         d_channel = msg.channel_mentions[0]
         return Channel(id=d_channel.id, name=d_channel.name, server=server)
 
-    return None
+    return server
