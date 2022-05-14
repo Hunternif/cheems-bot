@@ -13,6 +13,11 @@ logger = logging.getLogger('cheems_bot')
 async def on_ready():
     logger.info(f'{bot.user} successfully logged in!')
 
+@bot.event
+async def on_command_error(ctx, error):
+    # don't log errors for commands from other bots
+    pass
+
 
 try:
     bot.run(config.discord_token)
