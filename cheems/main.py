@@ -8,6 +8,7 @@ from cheems.text_gen_cog import TextGenCog
 
 logger = logging.getLogger('cheems')
 bot = commands.Bot(command_prefix='.')
+bot.remove_command('help')
 bot.add_cog(TextGenCog(bot))
 
 
