@@ -1,5 +1,6 @@
 # Local settings
 config.yaml
+markov_models/
 
 # IDEA
 .idea/*
