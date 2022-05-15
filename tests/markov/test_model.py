@@ -19,7 +19,7 @@ class TestMarkovModel(TestCase):
             target_id=9999,
             description="Hunternif's test data",
             data=MultiDict([
-                ('hello', Row(', my', 1)),
+                ('hello', Row(',my', 1)),
                 ('my', Row('world', 2)),
                 ('world', Row('.', 1)),
             ])
@@ -32,7 +32,7 @@ class TestMarkovModel(TestCase):
         ''')
         self.assertEqual({
             'hello': Row('world', 1),
-            'wow': Row('! amazing', 2),
+            'wow!': Row('amazing', 2),
         }, data)
 
     def test_parse_data_with_duplicates(self):
@@ -50,7 +50,7 @@ class TestMarkovModel(TestCase):
     def test_serlialize_data(self):
         data_str = serialize_data(MultiDict([
             ('hello', Row('world', 1)),
-            ('wow', Row('! amazing', 2)),
+            ('wow!', Row('amazing', 2)),
         ]))
         self.assertEqual('''
 hello world 1
@@ -66,7 +66,7 @@ wow! amazing 2
             target_id=9999,
             description="Hunternif's test data",
             data={
-                'hello': Row(', my', 1),
+                'hello': Row(',my', 1),
                 'my': Row('world', 2),
                 'world': Row('.', 1),
             }

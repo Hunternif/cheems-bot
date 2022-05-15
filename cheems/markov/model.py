@@ -1,5 +1,4 @@
 import logging
-import string
 import typing
 from datetime import datetime
 import xml.etree.ElementTree as ET
@@ -25,10 +24,6 @@ def parse_data(text: str) -> MultiDict[Row]:
     data: MultiDict[Row] = MultiDict()
     for line in text.strip().splitlines():
         (first_word, next_word, count) = line.strip().split(' ')
-        # check if there is punctuation attached to the 1st word
-        if first_word[-1] in string.punctuation:
-            next_word = f'{first_word[-1]} {next_word}'
-            first_word = first_word[:-1]
         data.add(first_word, Row(next_word, int(count)))
     return data
 
@@ -38,10 +33,6 @@ def serialize_data(data: MultiDict[Row]) -> str:
     for first_word, row in data.items():
         next_word = row.next_word
         count = row.count
-        # check if there is punctuation attached to the 2nd word, except end character '.':
-        if next_word != END and next_word[0] in string.punctuation:
-            first_word += next_word[0]
-            next_word = next_word[2:]
         lines.append(f'{first_word} {next_word} {count}')
     return '\n'.join(lines)
 
