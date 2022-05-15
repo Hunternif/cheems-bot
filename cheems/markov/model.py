@@ -5,6 +5,7 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 
 from attr import define
+from multidict import MultiDict
 
 logger = logging.getLogger(__name__)
 
@@ -20,19 +21,19 @@ Row = typing.NamedTuple('Row', [
 ])
 
 
-def parse_data(text: str) -> dict[str, Row]:
-    data: dict[str, Row] = {}
+def parse_data(text: str) -> MultiDict[Row]:
+    data: MultiDict[Row] = MultiDict()
     for line in text.strip().splitlines():
         (first_word, next_word, count) = line.strip().split(' ')
         # check if there is punctuation attached to the 1st word
         if first_word[-1] in string.punctuation:
             next_word = f'{first_word[-1]} {next_word}'
             first_word = first_word[:-1]
-        data[first_word] = Row(next_word, int(count))
+        data.add(first_word, Row(next_word, int(count)))
     return data
 
 
-def serialize_data(data: dict[str, Row]) -> str:
+def serialize_data(data: MultiDict[Row]) -> str:
     lines = []
     for first_word, row in data.items():
         next_word = row.next_word
@@ -53,7 +54,7 @@ class Model:
     server_id: int
     target_id: int
     description: str
-    data: dict[str, Row]
+    data: MultiDict[Row]
 
     @classmethod
     def from_xml(cls, xml_str: str) -> 'Model':

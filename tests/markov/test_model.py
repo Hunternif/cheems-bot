@@ -1,6 +1,8 @@
 from datetime import datetime
 from unittest import TestCase
 
+from multidict import MultiDict
+
 from cheems.markov.model import Model, Row, parse_data, serialize_data
 
 
@@ -16,11 +18,11 @@ class TestMarkovModel(TestCase):
             server_id=12345,
             target_id=9999,
             description="Hunternif's test data",
-            data={
-                'hello': Row(', my', 1),
-                'my': Row('world', 2),
-                'world': Row('.', 1),
-            }
+            data=MultiDict([
+                ('hello', Row(', my', 1)),
+                ('my', Row('world', 2)),
+                ('world', Row('.', 1)),
+            ])
         ), m)
 
     def test_parse_data(self):
@@ -33,11 +35,23 @@ class TestMarkovModel(TestCase):
             'wow': Row('! amazing', 2),
         }, data)
 
+    def test_parse_data_with_duplicates(self):
+        data = parse_data('''
+        hello world 1
+        hello darkness 2
+        world . 1
+        ''')
+        self.assertEqual(MultiDict([
+            ('hello', Row('world', 1)),
+            ('hello', Row('darkness', 2)),
+            ('world', Row('.', 1)),
+        ]), data)
+
     def test_serlialize_data(self):
-        data_str = serialize_data({
-            'hello': Row('world', 1),
-            'wow': Row('! amazing', 2),
-        })
+        data_str = serialize_data(MultiDict([
+            ('hello', Row('world', 1)),
+            ('wow', Row('! amazing', 2)),
+        ]))
         self.assertEqual('''
 hello world 1
 wow! amazing 2
