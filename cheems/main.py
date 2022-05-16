@@ -2,11 +2,14 @@ import logging
 
 from discord.ext.commands import Context
 
-import cheems.config as config
+from cheems.config import config
 from discord.ext import commands
+
+from cheems.markov import models
 from cheems.text_gen_cog import TextGenCog
 
 logger = logging.getLogger('cheems')
+models.load_models()
 bot = commands.Bot(command_prefix='.')
 bot.remove_command('help')
 bot.add_cog(TextGenCog(bot))
@@ -26,6 +29,6 @@ async def on_command_error(ctx: Context, error):
 
 
 try:
-    bot.run(config.discord_token)
+    bot.run(config['discord_token'])
 except Exception:
     logger.exception("Couldn't run bot")

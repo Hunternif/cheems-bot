@@ -3,9 +3,6 @@ import sys
 
 import yaml
 
-# Config variables
-discord_token = ''
-
 
 # Logger config
 root = logging.getLogger()
@@ -23,6 +20,5 @@ logger = logging.getLogger(__name__)
 try:
     with open('config.yaml', 'r') as f:
         config = yaml.safe_load(f)
-        discord_token = config['discord_token']
 except Exception:
     logger.exception("Couldn't read config.yaml")

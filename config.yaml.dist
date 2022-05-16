@@ -1,2 +1,3 @@
 # Copy this file to config.yaml in the production environment
 discord_token: 'REPLACE_ME'
+markov_model_dir: ~/cheems_markov_models
