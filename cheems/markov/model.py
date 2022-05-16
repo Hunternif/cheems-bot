@@ -13,7 +13,7 @@ XML_FORMAT_VERSION = 1
 # this character indicates end of a sentence
 END = '.'
 
-# 'next_word' will include punctuation attached to the preceding world, e.g. 'hello' + ', my'
+# 'next_word' will include punctuation attached to the preceding world, e.g. 'hello' - ',my'
 Row = typing.NamedTuple('Row', [
     ('next_word', str),
     ('count', int)

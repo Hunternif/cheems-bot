@@ -1,7 +1,8 @@
 import random
-import string
 
 from cheems.markov.model import Model, END
+
+punctuation = r'.,;:!?'
 
 
 def _pick_first_word(model: Model) -> str:
@@ -27,7 +28,7 @@ def _pick_next_word(model: Model, first_word: str) -> str:
     first_word = first_word.strip()
     if first_word == END:
         return END
-    if first_word[0] in string.punctuation:
+    if first_word[0] in punctuation:
         first_word = first_word[1:].strip()
     if len(first_word) == 0:
         return END
@@ -46,7 +47,7 @@ def _pick_next_word(model: Model, first_word: str) -> str:
     if next_word == END:
         return END
     # format punctuation correctly:
-    elif next_word[0] in string.punctuation:
+    elif next_word[0] in punctuation:
         return next_word[0] + ' ' + next_word[1:]
     else:
         return ' ' + next_word
