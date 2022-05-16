@@ -3,7 +3,6 @@ import sys
 
 import yaml
 
-
 # Logger config
 root = logging.getLogger()
 root.setLevel(logging.INFO)
@@ -16,6 +15,8 @@ root.addHandler(handler)
 
 # Local logger
 logger = logging.getLogger(__name__)
+
+config = {}
 
 try:
     with open('config.yaml', 'r') as f:

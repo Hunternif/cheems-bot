@@ -37,7 +37,7 @@ def serialize_data(data: MultiDict[Row]) -> str:
     return '\n'.join(lines)
 
 
-@define
+@define(slots=False)
 class Model:
     from_time: datetime
     to_time: datetime
@@ -45,7 +45,7 @@ class Model:
     server_id: int
     target_id: int
     description: str
-    data: MultiDict[Row]
+    data: MultiDict[Row] = MultiDict()
 
     @classmethod
     def from_xml(cls, xml_str: str) -> 'Model':

@@ -31,7 +31,8 @@ class User(Target):
         self.server_id = 0 if self.server is None else self.server.id
 
     def __str__(self):
-        return f'@{self.name}#{self.discriminator}'
+        server_part = '' if self.server is None else f' on {self.server.name}'
+        return f'@{self.name}#{self.discriminator}{server_part}'
 
 
 @define
@@ -42,7 +43,8 @@ class Channel(Target):
         self.server_id = 0 if self.server is None else self.server.id
 
     def __str__(self):
-        return f'#{self.name}'
+        server_part = '' if self.server is None else f' on {self.server.name}'
+        return f'#{self.name}{server_part}'
 
 
 @define

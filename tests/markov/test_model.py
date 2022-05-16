@@ -20,7 +20,7 @@ def create_test_model(data_str: str) -> Model:
 
 class TestMarkovModel(TestCase):
     def test_from_xml(self):
-        with open('./test_model.xml') as f:
+        with open('./tests/markov/test_model.xml') as f:
             xml_str = f.read()
         m = Model.from_xml(xml_str)
         self.assertEqual(Model(
