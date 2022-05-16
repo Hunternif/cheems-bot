@@ -5,7 +5,7 @@ from typing import Dict
 
 from cheems.config import config
 from cheems.markov.model import Model
-from cheems.types import Target, Server
+from cheems.types import Target, Server, Channel, User
 from cheems.util import sanitize_filename
 
 logger = logging.getLogger(__name__)
@@ -26,6 +26,18 @@ def _register_model(m: Model):
     models_by_target[m.target_id] = m
 
 
+def load_model_from_xml(file_path) -> Model:
+    """
+    After a model is loaded, the path to its file will be stored in attr 'file_path'
+    """
+    with open(file_path, encoding='utf-8') as f:
+        xml_str = f.read()
+    m = Model.from_xml(xml_str)
+    m.file_path = file_path
+    _register_model(m)
+    return m
+
+
 def load_models():
     """
     Loads all models from the configured directory
@@ -36,14 +48,27 @@ def load_models():
             filename = os.fsdecode(file)
             if filename.endswith('.xml'):
                 try:
-                    with open(full_path) as f:
-                        xml_str = f.read()
-                    m = Model.from_xml(xml_str)
-                    m.file_path = full_path
-                    _register_model(m)
+                    load_model_from_xml(full_path)
                 except Exception:
                     logger.exception(f'Failed to load model {filename}')
     logger.info(f'Loaded {len(models)} Markov models')
+
+
+def save_model(model: Model):
+    """
+    Saves model into the xml file, as written in attr 'file_path'
+    """
+    if not hasattr(model, 'file_path'):
+        # this shouldn't happen, so we'll save it in a special folder 'lost'
+        dir_name = f'{model.server_id}'
+        subdir = os.path.join(root_dir, 'lost', dir_name)
+        if not os.path.exists(subdir):
+            os.mkdir(subdir)
+        filename = f'{model.target_id}.xml'
+        file_path = os.path.join(subdir, filename)
+        model.file_path = file_path
+    with open(model.file_path, 'w', encoding='utf-8') as f:
+        f.write(model.to_xml())
 
 
 def create_model(target: Target) -> Model:
@@ -60,19 +85,22 @@ def create_model(target: Target) -> Model:
     )
     if hasattr(target, 'server'):
         server: Server = target.server
-        dir_name = f'{server.id} {sanitize_filename(server.name)}'
+        server_dir = f'{server.id} {sanitize_filename(server.name)}'
     else:
-        dir_name = f'{target.server_id}'
-    subdir = os.path.join(root_dir, dir_name)
+        server_dir = f'{target.server_id}'
+    if isinstance(target, Channel):
+        target_dir = 'channels'
+    elif isinstance(target, User):
+        target_dir = 'users'
+    else:
+        target_dir = ''
+    subdir = os.path.join(root_dir, server_dir, target_dir)
     if not os.path.exists(subdir):
-        os.mkdir(subdir)
+        os.makedirs(subdir)
     filename = f'{target.id} {sanitize_filename(target.name)}.xml'
     file_path = os.path.join(subdir, filename)
-
     model.file_path = file_path
-    with open(file_path, 'w') as f:
-        f.write(model.to_xml())
-
+    save_model(model)
     _register_model(model)
     logger.info(f'Created model {file_path}')
     return model

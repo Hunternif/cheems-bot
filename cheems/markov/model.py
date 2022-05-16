@@ -63,7 +63,7 @@ class Model:
             # noinspection PyUnboundLocalVariable
             return Model(from_time, to_time, updated_time, server_id, target_id, description, data)
         except Exception:
-            logger.exception(f'parsing model {str}')
+            logger.exception(f'parsing model {xml_str}')
 
     def to_xml(self) -> str:
         root = ET.Element('model', {
