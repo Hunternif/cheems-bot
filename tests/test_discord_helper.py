@@ -3,8 +3,8 @@ from unittest.mock import Mock
 
 from discord.ext.commands import Context
 
-from cheems.discord_helper import extract_target
-from cheems.types import User, Server, Channel
+from cheems.discord_helper import extract_target, map_message
+from cheems.types import User, Server, Channel, Message
 
 # test data
 user1 = Mock()
@@ -46,3 +46,13 @@ class TestDiscordHelper(TestCase):
         ctx = Context(prefix='.', message=msg)
         target = extract_target(ctx)
         self.assertEqual(Server(789, 'My server'), target)
+
+    def test_map_message(self):
+        d_msg = Mock(guild=server, author=user1, channel=channel, clean_content='Chinko!')
+        msg = map_message(d_msg)
+        self.assertEqual(Message(
+            user=User(123, 'Kagamin', 1111, Server(789, 'My server')),
+            channel=Channel(200, 'Lucky channel', Server(789, 'My server')),
+            server=Server(789, 'My server'),
+            text='Chinko!',
+        ), msg)

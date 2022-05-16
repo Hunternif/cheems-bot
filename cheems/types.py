@@ -41,3 +41,11 @@ class Channel(Target):
 
     def __str__(self):
         return f'#{self.name}'
+
+
+@define
+class Message:
+    server: Server
+    user: User
+    channel: Channel
+    text: str
