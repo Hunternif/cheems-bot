@@ -1,9 +1,21 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest import TestCase
 
 from multidict import MultiDict
 
 from cheems.markov.model import Model, Row, parse_data, serialize_data
+
+
+def create_test_model(data_str: str) -> Model:
+    return Model(
+        from_time=datetime.now() - timedelta(days=1),
+        to_time=datetime.now(),
+        updated_time=datetime.now(),
+        server_id=123,
+        target_id=456,
+        description='Test model',
+        data=parse_data(data_str)
+    )
 
 
 class TestMarkovModel(TestCase):
