@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from attr import define, field
@@ -10,6 +11,7 @@ from attr import define, field
 class Target:
     id: int
     name: str
+    created_at: datetime
     server_id: int = field(init=False)
 
 
@@ -53,3 +55,4 @@ class Message:
     user: User
     channel: Channel
     text: str
+    created_at: datetime
