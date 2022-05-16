@@ -1,3 +1,5 @@
+from typing import Optional
+
 from attr import define, field
 
 
@@ -23,10 +25,10 @@ class Server(Target):
 @define
 class User(Target):
     discriminator: int
-    server: Server
+    server: Optional[Server]
 
     def __attrs_post_init__(self):
-        self.server_id = self.server.id
+        self.server_id = 0 if self.server is None else self.server.id
 
     def __str__(self):
         return f'@{self.name}#{self.discriminator}'
@@ -34,10 +36,10 @@ class User(Target):
 
 @define
 class Channel(Target):
-    server: Server
+    server: Optional[Server]
 
     def __attrs_post_init__(self):
-        self.server_id = self.server.id
+        self.server_id = 0 if self.server is None else self.server.id
 
     def __str__(self):
         return f'#{self.name}'
@@ -45,7 +47,7 @@ class Channel(Target):
 
 @define
 class Message:
-    server: Server
+    server: Optional[Server]
     user: User
     channel: Channel
     text: str

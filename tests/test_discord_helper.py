@@ -11,6 +11,7 @@ user1 = Mock()
 user2 = Mock()
 bot = Mock()
 channel = Mock()
+dm_channel = Mock()
 server = Mock()
 
 
@@ -21,6 +22,8 @@ class TestDiscordHelper(TestCase):
         user2.configure_mock(id=456, name='Tsukasa', discriminator=2222)
         bot.configure_mock(id=100)
         channel.configure_mock(id=200, name='Lucky channel')
+        dm_channel.configure_mock(id=201)
+        dm_channel.__str__ = Mock(return_value='Direct channel name')
         server.configure_mock(id=789, name='My server', me=bot)
 
     def test_extract_target_first_user(self):
@@ -54,5 +57,15 @@ class TestDiscordHelper(TestCase):
             user=User(123, 'Kagamin', 1111, Server(789, 'My server')),
             channel=Channel(200, 'Lucky channel', Server(789, 'My server')),
             server=Server(789, 'My server'),
+            text='Chinko!',
+        ), msg)
+
+    def test_map_direct_message(self):
+        d_msg = Mock(guild=None, author=user1, channel=dm_channel, clean_content='Chinko!')
+        msg = map_message(d_msg)
+        self.assertEqual(Message(
+            user=User(123, 'Kagamin', 1111, None),
+            channel=Channel(201, 'Direct channel name', None),
+            server=None,
             text='Chinko!',
         ), msg)
