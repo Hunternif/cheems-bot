@@ -6,14 +6,19 @@ from multidict import MultiDict
 from cheems.markov.model import Model, Row, parse_data, serialize_data
 
 
-def create_test_model(data_str: str) -> Model:
+def create_test_model(
+        data_str: str = '',
+        server_id: int = 123,
+        target_id: int = 456,
+        description: str = 'Test model',
+) -> Model:
     return Model(
         from_time=datetime.now() - timedelta(days=1),
         to_time=datetime.now(),
         updated_time=datetime.now(),
-        server_id=123,
-        target_id=456,
-        description='Test model',
+        server_id=server_id,
+        target_id=target_id,
+        description=description,
         data=parse_data(data_str)
     )
 
