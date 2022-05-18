@@ -1,9 +1,9 @@
 import logging
 import typing
+from dataclasses import dataclass
 from datetime import datetime
 import xml.etree.ElementTree as ET
 
-from attr import define
 from multidict import MultiDict
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def serialize_data(data: MultiDict[Row]) -> str:
     return '\n'.join(lines)
 
 
-@define(slots=False)
+@dataclass
 class Model:
     from_time: datetime
     to_time: datetime

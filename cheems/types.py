@@ -1,35 +1,35 @@
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
-
-from attr import define, field
 
 
 # Domain classes for modelling Discord interactions
 
 
-@define
+@dataclass
 class Target:
+    """Base class for the entity that a Markov model describes."""
     id: int
     name: str
     created_at: datetime
     server_id: int = field(init=False)
 
 
-@define
+@dataclass
 class Server(Target):
-    def __attrs_post_init__(self):
+    def __post_init__(self):
         self.server_id = self.id
 
     def __str__(self):
         return f'{self.name}'
 
 
-@define
+@dataclass
 class User(Target):
     discriminator: int
     server: Optional[Server]
 
-    def __attrs_post_init__(self):
+    def __post_init__(self):
         self.server_id = 0 if self.server is None else self.server.id
 
     def __str__(self):
@@ -37,11 +37,11 @@ class User(Target):
         return f'@{self.name}#{self.discriminator}{server_part}'
 
 
-@define
+@dataclass
 class Channel(Target):
     server: Optional[Server]
 
-    def __attrs_post_init__(self):
+    def __post_init__(self):
         self.server_id = 0 if self.server is None else self.server.id
 
     def __str__(self):
@@ -49,7 +49,7 @@ class Channel(Target):
         return f'#{self.name}{server_part}'
 
 
-@define
+@dataclass
 class Message:
     server: Optional[Server]
     user: User
