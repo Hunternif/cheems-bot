@@ -99,5 +99,5 @@ second . 1
         self.assertEqual('first', w)
 
     def test_break_into_words(self):
-        words = _break_into_words(' Hello, darkness   , my   old friend?! I...')
+        words = _break_into_words(' Hello, darkness   ,, my   old friend?! I...')
         self.assertEqual(['Hello', ',darkness', ',my', 'old', 'friend', '?', 'I', '.'], words)

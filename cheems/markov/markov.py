@@ -6,6 +6,7 @@ from cheems.markov.model import Model, ENDS
 punctuation = '.,;:!?'
 punctuation_except_ENDS = ',;:'
 re_ENDS = re.escape(ENDS)
+re_punctuation = re.escape(punctuation)
 re_punctuation_except_END = re.escape(punctuation_except_ENDS)
 
 
@@ -15,8 +16,8 @@ def _break_into_words(sentence: str) -> list[str]:
     """
     # Clean whitespaces
     sentence = re.sub(r'\s+', ' ', sentence.strip())
-    # Convert long strings of end characters into a short one, e.g. ...->. ?!->?
-    sentence = re.sub(rf'([{re_ENDS}]+)', lambda m: m.group(0)[0], sentence)
+    # Convert long strings of punctuation into a short one, e.g. ...->. ?!->?
+    sentence = re.sub(rf'([{re_punctuation}]+)', lambda m: m.group(0)[0], sentence)
     # Ensure every end character is a separate word:
     sentence = re.sub(
         rf'(\S?)([{re_ENDS}])(\S?)',
@@ -74,7 +75,7 @@ def _pick_next_word(model: Model, first_word: str) -> str:
 
     if next_word in ENDS:
         return next_word
-    # format punctuation correctly:
+    # format punctuation like so: ', '
     elif next_word[0] in punctuation:
         return next_word[0] + ' ' + next_word[1:]
     else:
