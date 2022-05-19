@@ -42,9 +42,10 @@ def _pick_first_word(model: Model) -> str:
     if len(data) == 0:
         return ENDS[0]
     for x in range(len(data)):
-        first, row = random.choice(list(data.items()))
-        if row.next_word not in ENDS:
-            return first
+        first, next_words = random.choice(list(data.items()))
+        for y in next_words.keys():
+            if y not in ENDS:
+                return first
     return random.choice(list(data.keys()))
 
 
@@ -62,15 +63,15 @@ def _pick_next_word(model: Model, first_word: str) -> str:
     if len(first_word) == 0:
         return ENDS[0]
 
-    rows = model.data.getall(first_word, [])
-    if len(rows) == 0:
+    next_words = model.data[first_word] if first_word in model.data else []
+    if len(next_words) == 0:
         return ENDS[0]
 
     words: list[str] = []
     weights: list[int] = []
-    for r in rows:
-        words.append(r.next_word)
-        weights.append(r.count)
+    for next_word, count in next_words.items():
+        words.append(next_word)
+        weights.append(count)
     next_word = random.choices(words, weights)[0]
 
     if next_word in ENDS:

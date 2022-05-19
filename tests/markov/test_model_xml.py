@@ -1,9 +1,7 @@
 import unittest
 from datetime import datetime
 
-from multidict import MultiDict
-
-from cheems.markov.model import Row, Model
+from cheems.markov.model import Model
 from cheems.markov.model_xml import XmlModel
 
 
@@ -19,11 +17,11 @@ class TestMarkovXmlModel(unittest.TestCase):
             server_id=12345,
             target_id=9999,
             description="Hunternif's test data",
-            data=MultiDict([
-                ('hello', Row(',my', 1)),
-                ('my', Row('world', 2)),
-                ('world', Row('.', 1)),
-            ])
+            data={
+                'hello': {',my': 1},
+                'my': {'world': 2},
+                'world': {'.': 1},
+            }
         )), m)
 
     def test_to_xml_file(self):
@@ -34,11 +32,11 @@ class TestMarkovXmlModel(unittest.TestCase):
             server_id=12345,
             target_id=9999,
             description="Hunternif's test data",
-            data=MultiDict([
-                ('hello', Row(',my', 1)),
-                ('my', Row('world', 2)),
-                ('world', Row('.', 1)),
-            ])
+            data={
+                'hello': {',my': 1},
+                'my': {'world': 2},
+                'world': {'.': 1},
+            }
         ))
         serialized = model.to_xml()
         model_restored = XmlModel.from_xml(serialized)

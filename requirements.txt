@@ -4,4 +4,3 @@ pip==22.1
 setuptools==62.2.0
 
 PyYAML~=6.0
-multidict~=6.0.2

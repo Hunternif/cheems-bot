@@ -1,9 +1,7 @@
 from datetime import datetime, timedelta
 from unittest import TestCase
 
-from multidict import MultiDict
-
-from cheems.markov.model import Model, Row
+from cheems.markov.model import Model
 
 
 def create_test_model(
@@ -30,8 +28,8 @@ class TestMarkovModel(TestCase):
         wow! amazing 2
         ''')
         self.assertEqual({
-            'hello': Row('world', 1),
-            'wow!': Row('amazing', 2),
+            'hello': {'world': 1},
+            'wow!': {'amazing': 2},
         }, data)
 
     def test_parse_data_with_duplicates(self):
@@ -40,17 +38,19 @@ class TestMarkovModel(TestCase):
         hello darkness 2
         world . 1
         ''')
-        self.assertEqual(MultiDict([
-            ('hello', Row('world', 1)),
-            ('hello', Row('darkness', 2)),
-            ('world', Row('.', 1)),
-        ]), data)
+        self.assertCountEqual({
+            'hello': {
+                ',my': 1,
+                'darkness': 2,
+            },
+            'world': {'.': 1},
+        }, data)
 
     def test_serlialize_data(self):
-        data_str = Model.serialize_data(MultiDict([
-            ('hello', Row('world', 1)),
-            ('wow!', Row('amazing', 2)),
-        ]))
+        data_str = Model.serialize_data({
+            'hello': {'world': 1},
+            'wow!': {'amazing': 2},
+        })
         self.assertEqual('''
 hello world 1
 wow! amazing 2
