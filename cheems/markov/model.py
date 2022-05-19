@@ -44,9 +44,14 @@ class Model:
     def serialize_data(self) -> str:
         return self._serialize_data(self.data)
 
-    def append_word_pair(self, w1: str, w2: str, count: int = 1):
+    @classmethod
+    def _append_word_pair(cls, data: ModelData, w1: str, w2: str, count: int = 1):
         """Update data with this new word pair"""
-        self.data.setdefault(w1, {})
-        next_words = self.data[w1]
+        data.setdefault(w1, {})
+        next_words = data[w1]
         next_words.setdefault(w2, 0)
         next_words[w2] += count
+
+    def append_word_pair(self, w1: str, w2: str, count: int = 1):
+        """Update this Model's data with this new word pair"""
+        self._append_word_pair(self.data, w1, w2, count)

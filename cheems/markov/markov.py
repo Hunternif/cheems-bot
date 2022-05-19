@@ -1,7 +1,7 @@
 import random
 import re
 
-from cheems.markov.model import Model, ENDS
+from cheems.markov.model import Model, ENDS, ModelData
 from cheems.util import pairwise
 
 punctuation = '.,;:!?'
@@ -50,7 +50,7 @@ def _break_into_words(sentence: str) -> list[str]:
     return words
 
 
-def train_model_on_sentence(model: Model, sentence: str):
+def train_model_on_sentence(data: ModelData, sentence: str):
     """
     Updates the model with word sequences from the given sentence.
     """
@@ -62,16 +62,16 @@ def train_model_on_sentence(model: Model, sentence: str):
         w1 = _strip_punctuation(w1)
         if w1 in ENDS:
             continue
-        model.append_word_pair(w1, w2)
+        # noinspection PyProtectedMember
+        Model._append_word_pair(data, w1, w2)
 
 
-def _pick_first_word(model: Model) -> str:
+def _pick_first_word(data: ModelData) -> str:
     """
     Pick a random word that doesn't immediately end the chain.
     """
     # try multiple times until we run through the length of data.
     # if all words immediately end the phrase, pick any one
-    data = model.data
     if len(data) == 0:
         return ENDS[0]
     for x in range(len(data)):
@@ -82,7 +82,7 @@ def _pick_first_word(model: Model) -> str:
     return random.choice(list(data.keys()))
 
 
-def _pick_next_word(model: Model, first_word: str) -> str:
+def _pick_next_word(data: ModelData, first_word: str) -> str:
     """
     :param first_word: can include punctuation, which will be stripped.
     :return: Word including space and punctuation, e.g. ' word' or ', word'.
@@ -90,7 +90,7 @@ def _pick_next_word(model: Model, first_word: str) -> str:
     # drop punctuation from first_word:
     first_word = _strip_punctuation(first_word)
 
-    next_words = model.data[first_word] if first_word in model.data else []
+    next_words = data[first_word] if first_word in data else []
     if len(next_words) == 0:
         return ENDS[0]
 
@@ -110,11 +110,11 @@ def _pick_next_word(model: Model, first_word: str) -> str:
         return ' ' + next_word
 
 
-def markov_chain(model: Model, start: str = '', limit: int = 50) -> str:
+def markov_chain(data: ModelData, start: str = '', limit: int = 50) -> str:
     """
     Runs the given model as a Markov Chain.
 
-    :param model: contains possible word sequences.
+    :param data: contains possible word sequences.
     :param start: start of the sentence.
     If empty, the start will be picked randomly from the model.
     :param limit: maximum number of words.
@@ -125,7 +125,7 @@ def markov_chain(model: Model, start: str = '', limit: int = 50) -> str:
     # pick the first word to begin the chain
     first_word = start.strip().split(' ')[-1]
     if len(first_word) <= 0:
-        first_word = _pick_first_word(model)
+        first_word = _pick_first_word(data)
         if first_word in ENDS:
             return ''
         else:
@@ -135,7 +135,7 @@ def markov_chain(model: Model, start: str = '', limit: int = 50) -> str:
     last_word = first_word
     count = 1
     while count < limit:
-        next_word = _pick_next_word(model, last_word)
+        next_word = _pick_next_word(data, last_word)
         result += next_word
         count += 1
         last_word = next_word
