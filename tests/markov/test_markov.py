@@ -14,7 +14,15 @@ my world 1
 world . 1
         ''')
         s = markov_chain(model, 'hello')
-        self.assertEqual('hello, my world', s)
+        self.assertEqual('hello, my world.', s)
+
+    def test_various_ends(self):
+        model = create_test_model('''
+hello ,world 1
+world ! 1
+        ''')
+        s = markov_chain(model, 'hello')
+        self.assertEqual('hello, world!', s)
 
     def test_model_without_end(self):
         model = create_test_model('''
@@ -22,7 +30,7 @@ hello ,my 1
 my world 1
         ''')
         s = markov_chain(model, 'hello')
-        self.assertEqual('hello, my world', s)
+        self.assertEqual('hello, my world.', s)
 
     def test_weighted_chain(self):
         model = create_test_model('''
@@ -34,9 +42,9 @@ hello darkness 10
         for x in range(100):
             random.seed(x)
             s = markov_chain(model, 'hello')
-            if s == 'hello world':
+            if s == 'hello world.':
                 count_world += 1
-            elif s == 'hello darkness':
+            elif s == 'hello darkness.':
                 count_darkness += 1
         self.assertGreater(count_darkness, count_world * 5)
 
@@ -55,7 +63,7 @@ world . 1
         ''')
         random.seed(1)
         s = markov_chain(model, '  ')
-        self.assertEqual('hello, my world', s)
+        self.assertEqual('hello, my world.', s)
 
     def test_empty_model(self):
         model = create_test_model('')
@@ -91,5 +99,5 @@ second . 1
         self.assertEqual('first', w)
 
     def test_break_into_words(self):
-        words = _break_into_words(' Hello, darkness   , my   old friend. I...')
-        self.assertEqual(['Hello', ',darkness', ',my', 'old', 'friend', '.', 'I', '.'], words)
+        words = _break_into_words(' Hello, darkness   , my   old friend?! I...')
+        self.assertEqual(['Hello', ',darkness', ',my', 'old', 'friend', '?', 'I', '.'], words)

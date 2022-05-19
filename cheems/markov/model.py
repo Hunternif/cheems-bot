@@ -7,8 +7,8 @@ from multidict import MultiDict
 
 logger = logging.getLogger(__name__)
 
-# this character indicates end of a sentence
-END = '.'
+# these characters indicate end of a sentence
+ENDS = '.?!'
 
 # 'next_word' will include punctuation attached to the preceding world, e.g. 'hello' - ',my'
 Row = typing.NamedTuple('Row', [

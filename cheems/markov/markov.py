@@ -1,12 +1,12 @@
 import random
 import re
 
-from cheems.markov.model import Model, END
+from cheems.markov.model import Model, ENDS
 
 punctuation = '.,;:!?'
-
-re_END = re.escape(END)
-re_punctuation_except_END = re.escape(punctuation.replace(END, ''))
+punctuation_except_ENDS = ',;:'
+re_ENDS = re.escape(ENDS)
+re_punctuation_except_END = re.escape(punctuation_except_ENDS)
 
 
 def _break_into_words(sentence: str) -> list[str]:
@@ -15,12 +15,12 @@ def _break_into_words(sentence: str) -> list[str]:
     """
     # Clean whitespaces
     sentence = re.sub(r'\s+', ' ', sentence.strip())
-    # Convert '...' into '.':
-    sentence = re.sub(rf'{re_END}+', END, sentence)
-    # Ensure END is a separate word:
+    # Convert long strings of end characters into a short one, e.g. ...->. ?!->?
+    sentence = re.sub(rf'([{re_ENDS}]+)', lambda m: m.group(0)[0], sentence)
+    # Ensure every end character is a separate word:
     sentence = re.sub(
-        rf'(\S?){re_END}(\S?)',
-        lambda m: f'{m.group(1)} {END} {m.group(2)}',
+        rf'(\S?)([{re_ENDS}])(\S?)',
+        lambda m: f'{m.group(1)} {m.group(2)} {m.group(3)}',
         sentence
     )
     # Ensure punctuation sticks to the NEXT word, e.g. 'hello,'
@@ -39,10 +39,10 @@ def _pick_first_word(model: Model) -> str:
     # if all words immediately end the phrase, pick any one
     data = model.data
     if len(data) == 0:
-        return END
+        return ENDS[0]
     for x in range(len(data)):
         first, row = random.choice(list(data.items()))
-        if row.next_word != END:
+        if row.next_word not in ENDS:
             return first
     return random.choice(list(data.keys()))
 
@@ -54,16 +54,16 @@ def _pick_next_word(model: Model, first_word: str) -> str:
     """
     # drop punctuation from first_word:
     first_word = first_word.strip()
-    if first_word == END:
-        return END
+    if first_word in ENDS:
+        return first_word
     if first_word[0] in punctuation:
         first_word = first_word[1:].strip()
     if len(first_word) == 0:
-        return END
+        return ENDS[0]
 
     rows = model.data.getall(first_word, [])
     if len(rows) == 0:
-        return END
+        return ENDS[0]
 
     words: list[str] = []
     weights: list[int] = []
@@ -72,8 +72,8 @@ def _pick_next_word(model: Model, first_word: str) -> str:
         weights.append(r.count)
     next_word = random.choices(words, weights)[0]
 
-    if next_word == END:
-        return END
+    if next_word in ENDS:
+        return next_word
     # format punctuation correctly:
     elif next_word[0] in punctuation:
         return next_word[0] + ' ' + next_word[1:]
@@ -97,7 +97,7 @@ def markov_chain(model: Model, start: str = '', limit: int = 50) -> str:
     first_word = start.strip().split(' ')[-1]
     if len(first_word) <= 0:
         first_word = _pick_first_word(model)
-        if first_word == END:
+        if first_word in ENDS:
             return ''
         else:
             result = first_word
@@ -107,9 +107,9 @@ def markov_chain(model: Model, start: str = '', limit: int = 50) -> str:
     count = 1
     while count < limit:
         next_word = _pick_next_word(model, last_word)
-        if next_word.strip() == END:
-            break
         result += next_word
         count += 1
         last_word = next_word
+        if last_word in ENDS:
+            break
     return result
