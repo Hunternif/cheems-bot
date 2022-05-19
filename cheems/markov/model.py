@@ -35,8 +35,8 @@ class Model:
 
     @classmethod
     def serialize_data(cls, data: ModelData) -> str:
-        lines = []
+        lines: list[str] = []
         for first_word, next_words in data.items():
             for next_word, count in next_words.items():
                 lines.append(f'{first_word} {next_word} {count}')
-        return '\n'.join(lines)
+        return '\n'.join(sorted(lines))

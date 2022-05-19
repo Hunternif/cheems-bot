@@ -46,12 +46,21 @@ class TestMarkovModel(TestCase):
             'world': {'.': 1},
         }, data)
 
-    def test_serlialize_data(self):
+    def test_serlialize_data_sorted(self):
         data_str = Model.serialize_data({
-            'hello': {'world': 1},
-            'wow!': {'amazing': 2},
+            'world': {'.': 1},
+            'hello': {
+                'alpha': 4,
+                ',my': 1,
+                'darkness': 2,
+            },
+            'my': {'world': 3},
         })
         self.assertEqual('''
-hello world 1
-wow! amazing 2
+hello ,my 1
+hello alpha 4
+hello darkness 2
+my world 3
+world . 1
 '''.strip(), data_str)
+
