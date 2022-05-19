@@ -1,7 +1,7 @@
 import logging
 import os
 from datetime import datetime
-from typing import Dict
+from typing import Dict, Optional
 
 from cheems.config import config
 from cheems.markov.model import Model
@@ -9,7 +9,7 @@ from cheems.types import Target, Server, Channel, User
 from cheems.util import sanitize_filename
 
 logger = logging.getLogger(__name__)
-root_dir = config['markov_model_dir']
+root_dir: str = config['markov_model_dir']
 
 ModelsByTarget = Dict[int, Model]
 ModelsByServer = Dict[int, ModelsByTarget]
@@ -26,7 +26,7 @@ def _register_model(m: Model):
     models_by_target[m.target_id] = m
 
 
-def load_model_from_xml(file_path) -> Model:
+def load_model_from_xml(file_path: str) -> Model:
     """
     After a model is loaded, the path to its file will be stored in attr 'file_path'
     """
@@ -42,9 +42,11 @@ def load_models():
     """
     Loads all models from the configured directory
     """
-    for subdir, dirs, files in os.walk(root_dir):
+    subdir: str
+    files: list[str]
+    for subdir, _, files in os.walk(root_dir):
         for file in files:
-            full_path = os.path.join(subdir, file)
+            full_path: str = os.path.join(subdir, file)
             filename = os.fsdecode(file)
             if filename.endswith('.xml'):
                 try:
@@ -83,7 +85,9 @@ def create_model(target: Target) -> Model:
         target_id=target.id,
         description=str(target)
     )
-    if hasattr(target, 'server'):
+    if isinstance(target, Server):
+        server_dir = f'{target.id} {sanitize_filename(target.name)}'
+    elif hasattr(target, 'server'):
         server: Server = target.server
         server_dir = f'{server.id} {sanitize_filename(server.name)}'
     else:
@@ -94,11 +98,11 @@ def create_model(target: Target) -> Model:
         target_dir = 'users'
     else:
         target_dir = ''
-    subdir = os.path.join(root_dir, server_dir, target_dir)
+    subdir: str = os.path.join(root_dir, server_dir, target_dir)
     if not os.path.exists(subdir):
         os.makedirs(subdir)
     filename = f'{target.id} {sanitize_filename(target.name)}.xml'
-    file_path = os.path.join(subdir, filename)
+    file_path: str = os.path.join(subdir, filename)
     model.file_path = file_path
     save_model(model)
     _register_model(model)
@@ -115,4 +119,16 @@ def get_or_create_model(target: Target) -> Model:
     models_by_target = models_by_server[target.server_id]
     if target.id not in models_by_target:
         return create_model(target)
+    return models_by_target[target.id]
+
+
+def get_model(target: Target) -> Optional[Model]:
+    """
+    Finds an existing Markov model for this target, does not create new model.
+    """
+    if target.server_id not in models_by_server:
+        return None
+    models_by_target = models_by_server[target.server_id]
+    if target.id not in models_by_target:
+        return None
     return models_by_target[target.id]
