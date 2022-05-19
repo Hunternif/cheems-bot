@@ -1,8 +1,36 @@
 import random
+import re
 
 from cheems.markov.model import Model, END
 
-punctuation = r'.,;:!?'
+punctuation = '.,;:!?'
+
+re_END = re.escape(END)
+re_punctuation_except_END = re.escape(punctuation.replace(END, ''))
+
+
+def _break_into_words(sentence: str) -> list[str]:
+    """
+    Adds new word sequences to data from the given sentence.
+    """
+    # Clean whitespaces
+    sentence = re.sub(r'\s+', ' ', sentence.strip())
+    # Convert '...' into '.':
+    sentence = re.sub(rf'{re_END}+', END, sentence)
+    # Ensure END is a separate word:
+    sentence = re.sub(
+        rf'(\S?){re_END}(\S?)',
+        lambda m: f'{m.group(1)} {END} {m.group(2)}',
+        sentence
+    )
+    # Ensure punctuation sticks to the NEXT word, e.g. 'hello,'
+    sentence = re.sub(
+        rf'\s?([{re_punctuation_except_END}]+)\s',
+        lambda m: f' {m.group(1)}',
+        sentence
+    )
+    words = [w for w in sentence.split(' ') if len(w) > 0]
+    return words
 
 
 def _pick_first_word(model: Model) -> str:

@@ -1,7 +1,8 @@
 import random
 from unittest import TestCase
 
-from cheems.markov.markov import markov_chain, _pick_first_word
+# noinspection PyProtectedMember
+from cheems.markov.markov import markov_chain, _pick_first_word, _break_into_words
 from tests.markov.test_model import create_test_model
 
 
@@ -88,3 +89,7 @@ second . 1
         random.seed(2)
         w = _pick_first_word(model)
         self.assertEqual('first', w)
+
+    def test_break_into_words(self):
+        words = _break_into_words(' Hello, darkness   , my   old friend. I...')
+        self.assertEqual(['Hello', ',darkness', ',my', 'old', 'friend', '.', 'I', '.'], words)
