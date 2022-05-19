@@ -56,7 +56,7 @@ def save_model(xml_model: XmlModel):
         dir_name = f'{model.server_id}'
         subdir = os.path.join(root_dir, 'lost', dir_name)
         if not os.path.exists(subdir):
-            os.mkdir(subdir)
+            os.makedirs(subdir)
         filename = f'{model.target_id}.xml'
         file_path = os.path.join(subdir, filename)
         xml_model.file_path = file_path
