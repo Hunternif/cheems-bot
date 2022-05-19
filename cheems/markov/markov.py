@@ -28,7 +28,9 @@ def _break_into_words(sentence: str) -> list[str]:
     """
     Adds new word sequences to data from the given sentence.
     """
-    # Clean whitespaces
+    # Line breaks are considered end characters:
+    sentence = sentence.replace('\n', ENDS[0])
+    # Clean whitespaces:
     sentence = re.sub(r'\s+', ' ', sentence.strip())
     # Convert long strings of punctuation into a short one, e.g. ...->. ?!->?
     sentence = re.sub(rf'([{re_punctuation}]+)', lambda m: m.group(0)[0], sentence)

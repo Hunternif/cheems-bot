@@ -99,8 +99,12 @@ second . 1
         self.assertEqual('first', w)
 
     def test_break_into_words(self):
-        words = _break_into_words(' Hello, darkness   ,, my   old friend?! I...')
-        self.assertEqual(['Hello', ',darkness', ',my', 'old', 'friend', '?', 'I', '.'], words)
+        words = _break_into_words(
+            ' Hello, darkness   ,,\n my   old friend?! I... go \n home'
+        )
+        self.assertEqual([
+            'Hello', ',darkness', ',my', 'old', 'friend', '?', 'I', '.', 'go', '.', 'home'
+        ], words)
 
     def test_train_model(self):
         model = create_test_model('''
