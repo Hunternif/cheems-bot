@@ -5,8 +5,8 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from cheems.config import config
-from cheems.markov import models
-from cheems.markov.model import Model
+from cheems.markov import models_xml
+from cheems.markov.model_xml import XmlModel
 from cheems.types import User, Server, Channel
 
 # test data
@@ -18,7 +18,7 @@ user1 = User(123, 'Kagamin', time, 1111, server1)
 user2 = User(456, 'Tsukasa', time, 2222, server2)
 
 
-class TestMarkovModels(TestCase):
+class TestMarkovModelsXml(TestCase):
     temp_dir: TemporaryDirectory
 
     @classmethod
@@ -27,34 +27,33 @@ class TestMarkovModels(TestCase):
         config['markov_model_dir'] = cls.temp_dir.name
 
     def setUp(self) -> None:
-        # Reload models.py because the directory in the config changed,
+        # Reload models_xml.py because the directory in the config changed,
         # and to clean old references to saved models
-        reload(models)
+        reload(models_xml)
 
     @classmethod
     def tearDownClass(cls) -> None:
         cls.temp_dir.cleanup()
 
     def test_create_model(self):
-        m = models.create_model(User(
+        m = models_xml.create_model(User(
             id=123456,
             name='Hunternif',
             discriminator=1111,
             server=Server(id=123, name='Test server', created_at=datetime.now()),
             created_at=datetime.now(),
         ))
-        with open(m.file_path, 'r') as f:
-            m_restored = Model.from_xml(f.read())
+        m_restored = XmlModel.from_xml_file(m.file_path)
         self.assertEqual(m_restored, m)
 
     def test_create_models_dir_structure_and_reload(self):
         root = self.temp_dir.name
         data = [
-            (server1, models.create_model(server1)),
-            (server2, models.create_model(server2)),
-            (channel1, models.create_model(channel1)),
-            (user1, models.create_model(user1)),
-            (user2, models.create_model(user2)),
+            (server1, models_xml.create_model(server1)),
+            (server2, models_xml.create_model(server2)),
+            (channel1, models_xml.create_model(channel1)),
+            (user1, models_xml.create_model(user1)),
+            (user2, models_xml.create_model(user2)),
         ]
 
         paths = (
@@ -69,23 +68,23 @@ class TestMarkovModels(TestCase):
             self.assertEqual(os.path.join(root, *path), model.file_path)
 
         # clean old references
-        reload(models)
-        self.assertEqual(0, len(models.models))
-        self.assertEqual(0, len(models.models_by_server))
-        models.load_models()
+        reload(models_xml)
+        self.assertEqual(0, len(models_xml.models))
+        self.assertEqual(0, len(models_xml.models_by_server))
+        models_xml.load_models()
         for target, model in data:
-            loaded_model = models.get_model(target)
+            loaded_model = models_xml.get_model(target)
             self.assertEquals(model, loaded_model)
 
     def test_load_and_save_model(self):
-        m = models.create_model(user1)
-        self.assertEqual(user1.created_at, m.from_time)
+        m = models_xml.create_model(user1)
+        self.assertEqual(user1.created_at, m.model.from_time)
 
         new_time = datetime.fromisoformat('2022-05-01')
-        m.from_time = new_time
-        models.save_model(m)
+        m.model.from_time = new_time
+        models_xml.save_model(m)
 
-        reload(models)
-        models.load_models()
-        loaded_m = models.get_model(user1)
-        self.assertEqual(new_time, loaded_m.from_time)
+        reload(models_xml)
+        models_xml.load_models()
+        loaded_m = models_xml.get_model(user1)
+        self.assertEqual(new_time, loaded_m.model.from_time)

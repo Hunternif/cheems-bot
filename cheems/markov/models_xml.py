@@ -5,37 +5,26 @@ from typing import Dict, Optional
 
 from cheems.config import config
 from cheems.markov.model import Model
+from cheems.markov.model_xml import XmlModel
 from cheems.types import Target, Server, Channel, User
 from cheems.util import sanitize_filename
 
 logger = logging.getLogger(__name__)
 root_dir: str = config['markov_model_dir']
 
-ModelsByTarget = Dict[int, Model]
+ModelsByTarget = Dict[int, XmlModel]
 ModelsByServer = Dict[int, ModelsByTarget]
 
 # models are mapped by server id and then by target id
 models_by_server: ModelsByServer = {}
-models: list[Model] = []
+models: list[XmlModel] = []
 
 
-def _register_model(m: Model):
+def _register_model(m: XmlModel):
     models.append(m)
-    models_by_server.setdefault(m.server_id, {})
-    models_by_target = models_by_server[m.server_id]
-    models_by_target[m.target_id] = m
-
-
-def load_model_from_xml(file_path: str) -> Model:
-    """
-    After a model is loaded, the path to its file will be stored in attr 'file_path'
-    """
-    with open(file_path, encoding='utf-8') as f:
-        xml_str = f.read()
-    m = Model.from_xml(xml_str)
-    m.file_path = file_path
-    _register_model(m)
-    return m
+    models_by_server.setdefault(m.model.server_id, {})
+    models_by_target = models_by_server[m.model.server_id]
+    models_by_target[m.model.target_id] = m
 
 
 def load_models():
@@ -50,17 +39,19 @@ def load_models():
             filename = os.fsdecode(file)
             if filename.endswith('.xml'):
                 try:
-                    load_model_from_xml(full_path)
+                    m = XmlModel.from_xml_file(full_path)
+                    _register_model(m)
                 except Exception:
                     logger.exception(f'Failed to load model {filename}')
     logger.info(f'Loaded {len(models)} Markov models')
 
 
-def save_model(model: Model):
+def save_model(xml_model: XmlModel):
     """
     Saves model into the xml file, as written in attr 'file_path'
     """
-    if not hasattr(model, 'file_path'):
+    model = xml_model.model
+    if xml_model.file_path is None:
         # this shouldn't happen, so we'll save it in a special folder 'lost'
         dir_name = f'{model.server_id}'
         subdir = os.path.join(root_dir, 'lost', dir_name)
@@ -68,12 +59,12 @@ def save_model(model: Model):
             os.mkdir(subdir)
         filename = f'{model.target_id}.xml'
         file_path = os.path.join(subdir, filename)
-        model.file_path = file_path
-    with open(model.file_path, 'w', encoding='utf-8') as f:
-        f.write(model.to_xml())
+        xml_model.file_path = file_path
+    with open(xml_model.file_path, 'w', encoding='utf-8') as f:
+        f.write(xml_model.to_xml())
 
 
-def create_model(target: Target) -> Model:
+def create_model(target: Target) -> XmlModel:
     """
     Creates model file and return the new model
     """
@@ -103,14 +94,15 @@ def create_model(target: Target) -> Model:
         os.makedirs(subdir)
     filename = f'{target.id} {sanitize_filename(target.name)}.xml'
     file_path: str = os.path.join(subdir, filename)
-    model.file_path = file_path
-    save_model(model)
-    _register_model(model)
+
+    xml_model = XmlModel(model, file_path)
+    save_model(xml_model)
+    _register_model(xml_model)
     logger.info(f'Created model {file_path}')
-    return model
+    return xml_model
 
 
-def get_or_create_model(target: Target) -> Model:
+def get_or_create_model(target: Target) -> XmlModel:
     """
     Finds an existing Markov model for this target, or creates a new one.
     """
@@ -122,7 +114,7 @@ def get_or_create_model(target: Target) -> Model:
     return models_by_target[target.id]
 
 
-def get_model(target: Target) -> Optional[Model]:
+def get_model(target: Target) -> Optional[XmlModel]:
     """
     Finds an existing Markov model for this target, does not create new model.
     """

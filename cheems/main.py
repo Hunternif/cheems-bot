@@ -5,11 +5,11 @@ from discord.ext.commands import Context
 from cheems.config import config
 from discord.ext import commands
 
-from cheems.markov import models
+from cheems.markov import models_xml
 from cheems.text_gen_cog import TextGenCog
 
 logger = logging.getLogger('cheems')
-models.load_models()
+models_xml.load_models()
 bot = commands.Bot(command_prefix='.')
 bot.remove_command('help')
 bot.add_cog(TextGenCog(bot))
