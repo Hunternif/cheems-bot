@@ -34,9 +34,19 @@ class Model:
         return data
 
     @classmethod
-    def serialize_data(cls, data: ModelData) -> str:
+    def _serialize_data(cls, data: ModelData) -> str:
         lines: list[str] = []
         for first_word, next_words in data.items():
             for next_word, count in next_words.items():
                 lines.append(f'{first_word} {next_word} {count}')
         return '\n'.join(sorted(lines))
+
+    def serialize_data(self) -> str:
+        return self._serialize_data(self.data)
+
+    def append_word_pair(self, w1: str, w2: str, count: int = 1):
+        """Update data with this new word pair"""
+        self.data.setdefault(w1, {})
+        next_words = self.data[w1]
+        next_words.setdefault(w2, 0)
+        next_words[w2] += count

@@ -55,6 +55,6 @@ class XmlModel:
             'target_id': str(self.model.target_id),
             'description': self.model.description,
         })
-        root.text = f'\n{Model.serialize_data(self.model.data)}\n'
+        root.text = f'\n{self.model.serialize_data()}\n'
         raw_str = ET.tostring(root, 'utf-8', xml_declaration=True)
         return bytes.decode(raw_str)

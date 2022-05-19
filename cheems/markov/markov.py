@@ -2,12 +2,26 @@ import random
 import re
 
 from cheems.markov.model import Model, ENDS
+from cheems.util import pairwise
 
 punctuation = '.,;:!?'
 punctuation_except_ENDS = ',;:'
 re_ENDS = re.escape(ENDS)
 re_punctuation = re.escape(punctuation)
 re_punctuation_except_END = re.escape(punctuation_except_ENDS)
+
+
+def _strip_punctuation(word: str) -> str:
+    word = word.strip()
+    if len(word) == 0:
+        return ENDS[0]
+    if word in ENDS:
+        return word
+    if word[0] in punctuation:
+        word = word[1:].strip()
+    if len(word) == 0:
+        return ENDS[0]
+    return word
 
 
 def _break_into_words(sentence: str) -> list[str]:
@@ -34,8 +48,25 @@ def _break_into_words(sentence: str) -> list[str]:
     return words
 
 
+def train_model_on_sentence(model: Model, sentence: str):
+    """
+    Updates the model with word sequences from the given sentence.
+    """
+    words = _break_into_words(sentence)
+    # ensure there is an END character at the end:
+    if words[-1] not in ENDS:
+        words.append(ENDS[0])
+    for w1, w2 in pairwise(words):
+        w1 = _strip_punctuation(w1)
+        if w1 in ENDS:
+            continue
+        model.append_word_pair(w1, w2)
+
+
 def _pick_first_word(model: Model) -> str:
-    """Pick a random word that doesn't immediately end the chain."""
+    """
+    Pick a random word that doesn't immediately end the chain.
+    """
     # try multiple times until we run through the length of data.
     # if all words immediately end the phrase, pick any one
     data = model.data
@@ -55,13 +86,7 @@ def _pick_next_word(model: Model, first_word: str) -> str:
     :return: Word including space and punctuation, e.g. ' word' or ', word'.
     """
     # drop punctuation from first_word:
-    first_word = first_word.strip()
-    if first_word in ENDS:
-        return first_word
-    if first_word[0] in punctuation:
-        first_word = first_word[1:].strip()
-    if len(first_word) == 0:
-        return ENDS[0]
+    first_word = _strip_punctuation(first_word)
 
     next_words = model.data[first_word] if first_word in model.data else []
     if len(next_words) == 0:

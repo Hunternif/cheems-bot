@@ -47,7 +47,7 @@ class TestMarkovModel(TestCase):
         }, data)
 
     def test_serlialize_data_sorted(self):
-        data_str = Model.serialize_data({
+        data_str = Model._serialize_data({
             'world': {'.': 1},
             'hello': {
                 'alpha': 4,
