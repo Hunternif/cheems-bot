@@ -112,7 +112,7 @@ hello ,my 1
 my world 2
 world . 1
         ''')
-        train_model_on_sentence(data, 'hello my world, dude')
+        train_model_on_sentence(data, 'Hello MY world, dude')
         self.assertEqual('''
 dude . 1
 hello ,my 1

@@ -47,6 +47,8 @@ class Model:
     @classmethod
     def _append_word_pair(cls, data: ModelData, w1: str, w2: str, count: int = 1):
         """Update data with this new word pair"""
+        w1 = w1.lower()
+        w2 = w2.lower()
         data.setdefault(w1, {})
         next_words = data[w1]
         next_words.setdefault(w2, 0)
