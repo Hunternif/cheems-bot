@@ -69,8 +69,8 @@ def create_model(target: Target) -> XmlModel:
     Creates model file and return the new model
     """
     model = Model(
-        from_time=target.created_at,
-        to_time=target.created_at,
+        from_time=datetime.fromtimestamp(0),
+        to_time=datetime.fromtimestamp(0),
         updated_time=datetime.now(),
         server_id=target.server_id,
         target_id=target.id,

@@ -28,7 +28,7 @@ async def train():
             if isinstance(discord_channel, TextChannel):
                 ch = map_channel(discord_channel)
                 ch_model = models_xml.get_or_create_model(ch)
-                asyncio.create_task(update_model(discord_channel, ch_model.to_time))
+                asyncio.create_task(update_model(discord_channel, ch_model.model.to_time))
 
 
 async def update_model(discord_channel: TextChannel, after: datetime):

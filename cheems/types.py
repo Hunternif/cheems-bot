@@ -14,7 +14,6 @@ class Target:
     """
     id: int
     name: str
-    created_at: datetime
     server_id: int = field(init=False)
 
 

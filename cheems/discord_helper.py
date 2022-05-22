@@ -11,20 +11,19 @@ from cheems.types import Server, Target, User, Channel, Message
 def map_server(guild: Optional[Guild]) -> Optional[Server]:
     if guild is None:
         return None
-    return Server(id=guild.id, name=guild.name, created_at=guild.created_at)
+    return Server(id=guild.id, name=guild.name)
 
 
 def map_user(m: BaseUser, server: Optional[Server]) -> User:
-    return User(id=m.id, name=m.name, discriminator=m.discriminator, server=server, created_at=m.created_at)
+    return User(id=m.id, name=m.name, discriminator=m.discriminator, server=server)
 
 
 def map_channel(ch) -> Channel:
-    created_at = ch.created_at if hasattr(ch, 'created_at') else datetime.utcfromtimestamp(0)
     if hasattr(ch, 'name') and hasattr(ch, 'guild'):
         server = map_server(ch.guild)
-        return Channel(id=ch.id, name=ch.name, server=server, created_at=created_at)
+        return Channel(id=ch.id, name=ch.name, server=server)
     else:
-        return Channel(id=ch.id, name=str(ch), server=None, created_at=created_at)
+        return Channel(id=ch.id, name=str(ch), server=None)
 
 
 def extract_target(ctx: DiscordContext) -> Target:

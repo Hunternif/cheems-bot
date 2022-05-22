@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 from importlib import reload
 from tempfile import TemporaryDirectory
 from unittest import TestCase
@@ -10,12 +9,11 @@ from cheems.markov.model_xml import XmlModel
 from cheems.types import User, Server, Channel
 
 # test data
-time = datetime.now()
-server1 = Server(100, 'London', time)
-server2 = Server(200, 'Oxford', time)
-channel1 = Channel(101, 'Lucky channel', time, server1)
-user1 = User(123, 'Kagamin', time, 1111, server1)
-user2 = User(456, 'Tsukasa', time, 2222, server2)
+server1 = Server(100, 'London')
+server2 = Server(200, 'Oxford')
+channel1 = Channel(101, 'Lucky channel', server1)
+user1 = User(123, 'Kagamin', 1111, server1)
+user2 = User(456, 'Tsukasa', 2222, server2)
 
 
 class TestMarkovModelsXml(TestCase):
@@ -40,8 +38,7 @@ class TestMarkovModelsXml(TestCase):
             id=123456,
             name='Hunternif',
             discriminator=1111,
-            server=Server(id=123, name='Test server', created_at=datetime.now()),
-            created_at=datetime.now(),
+            server=Server(id=123, name='Test server'),
         ))
         m_restored = XmlModel.from_xml_file(m.file_path)
         self.assertEqual(m_restored, m)
@@ -78,13 +75,14 @@ class TestMarkovModelsXml(TestCase):
 
     def test_load_and_save_model(self):
         m = models_xml.create_model(user1)
-        self.assertEqual(user1.created_at, m.model.from_time)
+        self.assertEqual(user1.id, m.model.target_id)
+        self.assertEqual({}, m.model.data)
 
-        new_time = datetime.fromisoformat('2022-05-01')
-        m.model.from_time = new_time
+        m.model.append_word_pair('hello', 'world')
+        self.assertEqual({'hello': {'world': 1}}, m.model.data)
         models_xml.save_model(m)
 
         reload(models_xml)
         models_xml.load_models()
         loaded_m = models_xml.get_model(user1)
-        self.assertEqual(new_time, loaded_m.model.from_time)
+        self.assertEqual({'hello': {'world': 1}}, loaded_m.model.data)
