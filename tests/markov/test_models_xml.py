@@ -75,14 +75,14 @@ class TestMarkovModelsXml(TestCase):
 
     def test_load_and_save_model(self):
         m = models_xml.create_model(user1)
-        self.assertEqual(user1.id, m.model.target_id)
-        self.assertEqual({}, m.model.data)
+        self.assertEqual(user1.id, m.target_id)
+        self.assertEqual({}, m.data)
 
-        m.model.append_word_pair('hello', 'world')
-        self.assertEqual({'hello': {'world': 1}}, m.model.data)
+        m.append_word_pair('hello', 'world')
+        self.assertEqual({'hello': {'world': 1}}, m.data)
         models_xml.save_model(m)
 
         reload(models_xml)
         models_xml.load_models()
         loaded_m = models_xml.get_model(user1)
-        self.assertEqual({'hello': {'world': 1}}, loaded_m.model.data)
+        self.assertEqual({'hello': {'world': 1}}, loaded_m.data)

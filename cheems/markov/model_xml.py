@@ -14,9 +14,12 @@ XML_FORMAT_VERSION = 1
 
 
 @dataclass
-class XmlModel:
-    model: Model
+class XmlModel(Model):
     file_path: Optional[str] = None
+
+    @classmethod
+    def from_model(cls, model: Model, file_path: str = None) -> 'XmlModel':
+        return cls(**model.__dict__, file_path=file_path)
 
     @classmethod
     def from_xml_file(cls, file_path: str) -> 'XmlModel':
@@ -40,21 +43,20 @@ class XmlModel:
                 description = xml.attrib['description']
                 data = Model.parse_data(xml.text)
             # noinspection PyUnboundLocalVariable
-            m = Model(from_time, to_time, updated_time, server_id, target_id, description, data)
-            return XmlModel(m)
+            return XmlModel(from_time, to_time, updated_time, server_id, target_id, description, data)
         except Exception:
             logger.exception(f'parsing XML model {xml_str}')
 
     def to_xml(self) -> str:
         root = ET.Element('model', {
             'format_version': str(XML_FORMAT_VERSION),
-            'from_time': self.model.from_time.isoformat(' '),
-            'to_time': self.model.to_time.isoformat(' '),
-            'updated_time': self.model.updated_time.isoformat(' '),
-            'server_id': str(self.model.server_id),
-            'target_id': str(self.model.target_id),
-            'description': self.model.description,
+            'from_time': self.from_time.isoformat(' '),
+            'to_time': self.to_time.isoformat(' '),
+            'updated_time': self.updated_time.isoformat(' '),
+            'server_id': str(self.server_id),
+            'target_id': str(self.target_id),
+            'description': self.description,
         })
-        root.text = f'\n{self.model.serialize_data()}\n'
+        root.text = f'\n{self.serialize_data()}\n'
         raw_str = ET.tostring(root, 'utf-8', xml_declaration=True)
         return bytes.decode(raw_str)

@@ -22,9 +22,9 @@ models: list[XmlModel] = []
 
 def _register_model(m: XmlModel):
     models.append(m)
-    models_by_server.setdefault(m.model.server_id, {})
-    models_by_target = models_by_server[m.model.server_id]
-    models_by_target[m.model.target_id] = m
+    models_by_server.setdefault(m.server_id, {})
+    models_by_target = models_by_server[m.server_id]
+    models_by_target[m.target_id] = m
 
 
 def load_models():
@@ -46,11 +46,11 @@ def load_models():
     logger.info(f'Loaded {len(models)} Markov models')
 
 
-def save_model(xml_model: XmlModel):
+def save_model(model: Model):
     """
     Saves model into the xml file, as written in attr 'file_path'
     """
-    model = xml_model.model
+    xml_model = model if isinstance(model, XmlModel) else XmlModel.from_model(model)
     if xml_model.file_path is None:
         # this shouldn't happen, so we'll save it in a special folder 'lost'
         dir_name = f'{model.server_id}'
@@ -68,7 +68,7 @@ def create_model(target: Target) -> XmlModel:
     """
     Creates model file and return the new model
     """
-    model = Model(
+    xml_model = XmlModel(
         from_time=datetime.fromtimestamp(0),
         to_time=datetime.fromtimestamp(0),
         updated_time=datetime.now(),
@@ -94,8 +94,8 @@ def create_model(target: Target) -> XmlModel:
         os.makedirs(subdir)
     filename = f'{target.id} {sanitize_filename(target.name)}.xml'
     file_path: str = os.path.join(subdir, filename)
+    xml_model.file_path = file_path
 
-    xml_model = XmlModel(model, file_path)
     save_model(xml_model)
     _register_model(xml_model)
     logger.info(f'Created model {file_path}')
