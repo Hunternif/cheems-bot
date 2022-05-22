@@ -8,7 +8,10 @@ from typing import Optional
 
 @dataclass
 class Target:
-    """Base class for the entity that a Markov model describes."""
+    """
+    Base class for a Discord entity associated with a Model.
+    E.g. if a Model models speech patterns of a user, this user is the target.
+    """
     id: int
     name: str
     created_at: datetime

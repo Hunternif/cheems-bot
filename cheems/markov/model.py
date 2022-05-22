@@ -4,14 +4,15 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-# these characters indicate end of a sentence
-ENDS = '.?!'
-
 ModelData = dict[str, dict[str, int]]
 
 
 @dataclass
 class Model:
+    """
+    The data structure holding the word sequences for Markov chains.
+    This class is responsible for storing and serializing the data.
+    """
     from_time: datetime
     to_time: datetime
     updated_time: datetime

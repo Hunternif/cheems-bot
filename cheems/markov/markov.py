@@ -1,9 +1,11 @@
 import random
 import re
 
-from cheems.markov.model import Model, ENDS, ModelData
+from cheems.markov.model import Model, ModelData
 from cheems.util import pairwise
 
+# these characters indicate end of a sentence
+ENDS = '.?!'
 punctuation = '.,;:!?'
 punctuation_except_ENDS = ',;:'
 re_ENDS = re.escape(ENDS)
@@ -11,8 +13,12 @@ re_punctuation = re.escape(punctuation)
 re_punctuation_except_END = re.escape(punctuation_except_ENDS)
 
 
-def _strip_punctuation(word: str) -> str:
-    word = word.strip()
+def _canonical_form(word: str) -> str:
+    """
+    Returns the canonical form of the word: lowercase, no whitespace, no punctuation.
+    This form is used as key in the data dictionary.
+    """
+    word = word.lower().strip()
     if len(word) == 0:
         return ENDS[0]
     if word in ENDS:
@@ -26,7 +32,8 @@ def _strip_punctuation(word: str) -> str:
 
 def _break_into_words(sentence: str) -> list[str]:
     """
-    Adds new word sequences to data from the given sentence.
+    Extracts a sequence of words from the sentence.
+    Punctuation is stripped or formatted for the model.
     """
     # Line breaks are considered end characters:
     sentence = sentence.replace('\n', ENDS[0])
@@ -59,7 +66,7 @@ def train_model_on_sentence(data: ModelData, sentence: str):
     if words[-1] not in ENDS:
         words.append(ENDS[0])
     for w1, w2 in pairwise(words):
-        w1 = _strip_punctuation(w1)
+        w1 = _canonical_form(w1)
         if w1 in ENDS:
             continue
         # noinspection PyProtectedMember
@@ -88,7 +95,7 @@ def _pick_next_word(data: ModelData, first_word: str) -> str:
     :return: Word including space and punctuation, e.g. ' word' or ', word'.
     """
     # drop punctuation from first_word:
-    first_word = _strip_punctuation(first_word)
+    first_word = _canonical_form(first_word)
 
     next_words = data[first_word] if first_word in data else []
     if len(next_words) == 0:
