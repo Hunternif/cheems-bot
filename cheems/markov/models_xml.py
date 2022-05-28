@@ -98,7 +98,6 @@ def create_model(target: Target) -> XmlModel:
     file_path: str = os.path.join(subdir, filename)
     xml_model.file_path = file_path
 
-    save_model(xml_model)
     _register_model(xml_model)
     logger.info(f'Created model {file_path}')
     return xml_model

@@ -40,6 +40,7 @@ class TestMarkovModelsXml(TestCase):
             discriminator=1111,
             server=Server(id=123, name='Test server'),
         ))
+        models_xml.save_model(m)
         m_restored = XmlModel.from_xml_file(m.file_path)
         self.assertEqual(m_restored, m)
 
@@ -63,6 +64,7 @@ class TestMarkovModelsXml(TestCase):
 
         for path, (target, model) in zip(paths, data):
             self.assertEqual(os.path.join(root, *path), model.file_path)
+            models_xml.save_model(model)
 
         # clean old references
         reload(models_xml)
