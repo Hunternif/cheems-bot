@@ -14,14 +14,14 @@ class Target:
     """
     id: int
     name: str
-    server_id: int = field(init=False)
+
+    @property
+    def server_id(self) -> int:
+        return self.server.id if hasattr(self, 'server') else 0
 
 
 @dataclass
 class Server(Target):
-    def __post_init__(self):
-        self.server_id = self.id
-
     def __str__(self):
         return f'{self.name}'
 
@@ -31,9 +31,6 @@ class User(Target):
     discriminator: int
     server: Optional[Server]
 
-    def __post_init__(self):
-        self.server_id = 0 if self.server is None else self.server.id
-
     def __str__(self):
         server_part = '' if self.server is None else f' on {self.server.name}'
         return f'@{self.name}#{self.discriminator}{server_part}'
@@ -42,9 +39,6 @@ class User(Target):
 @dataclass
 class Channel(Target):
     server: Optional[Server]
-
-    def __post_init__(self):
-        self.server_id = 0 if self.server is None else self.server.id
 
     def __str__(self):
         server_part = '' if self.server is None else f' on {self.server.name}'
