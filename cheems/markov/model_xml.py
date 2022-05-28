@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional
 
 from cheems.markov.model import Model
-from cheems.types import Target, User, Server, Channel
+from cheems.types import Target, User, Server, Channel, Topic
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +74,8 @@ def _target_from_xml(tag: ET.Element) -> Target:
         return _server_from_xml(tag)
     elif t_type == Channel.__name__:
         return _channel_from_xml(tag)
+    elif t_type == Topic.__name__:
+        return _topic_from_xml(tag)
 
 
 def _target_to_xml(root: ET.Element, target: Target):
@@ -86,6 +88,8 @@ def _target_to_xml(root: ET.Element, target: Target):
         _server_to_xml(tag, target)
     elif isinstance(target, Channel):
         _channel_to_xml(tag, target)
+    elif isinstance(target, Topic):
+        _topic_to_xml(tag, target)
 
 
 def _user_from_xml(tag: ET.Element) -> User:
@@ -116,6 +120,20 @@ def _channel_to_xml(tag: ET.Element, channel: Channel):
     ET.SubElement(tag, 'name').text = channel.name
     if channel.server is not None:
         _server_to_xml(ET.SubElement(tag, 'server'), channel.server)
+
+
+def _topic_from_xml(tag: ET.Element) -> Topic:
+    name = str(tag.find('name').text)
+    server = _maybe_server_from_xml(tag.find('server'))
+    keywords = str(tag.find('keywords').text).split(' ')
+    return Topic(name, server, keywords)
+
+
+def _topic_to_xml(tag: ET.Element, topic: Topic):
+    ET.SubElement(tag, 'name').text = topic.name
+    ET.SubElement(tag, 'keywords').text = ' '.join(topic.keywords)
+    if topic.server is not None:
+        _server_to_xml(ET.SubElement(tag, 'server'), topic.server)
 
 
 def _server_from_xml(tag: ET.Element) -> Server:

@@ -3,13 +3,14 @@ import unittest
 from datetime import datetime
 
 from cheems.markov.model_xml import XmlModel
-from cheems.types import User, Server, Channel
+from cheems.types import User, Server, Channel, Topic
 
+test_server = Server(12345, 'Test server')
 test_model = XmlModel(
     from_time=datetime(2022, 4, 1),
     to_time=datetime(2022, 5, 15),
     updated_time=datetime(2022, 5, 15),
-    target=User(9999, 'Hunternif', 8888, Server(12345, 'Test server')),
+    target=User(9999, 'Hunternif', 8888, test_server),
     description="Hunternif's test data",
     data={
         'hello': {',my': 1},
@@ -33,7 +34,7 @@ class TestMarkovXmlModel(unittest.TestCase):
         self.assertEqual(model, model_restored)
 
     def test_server_model_xml_file(self):
-        model = dataclasses.replace(test_model, target=Server(789, 'My server'))
+        model = dataclasses.replace(test_model, target=test_server)
         serialized = model.to_xml()
         model_restored = XmlModel.from_xml(serialized)
         self.assertEqual(model, model_restored)
@@ -41,7 +42,16 @@ class TestMarkovXmlModel(unittest.TestCase):
     def test_channel_model_xml_file(self):
         model = dataclasses.replace(
             test_model,
-            target=Channel(200, 'Lucky channel', Server(789, 'My server'))
+            target=Channel(200, 'Lucky channel', test_server)
+        )
+        serialized = model.to_xml()
+        model_restored = XmlModel.from_xml(serialized)
+        self.assertEqual(model, model_restored)
+
+    def test_topic_model_xml_file(self):
+        model = dataclasses.replace(
+            test_model,
+            target=Topic('Genshin', test_server, ['genshin', 'геншин', 'гейщит'])
         )
         serialized = model.to_xml()
         model_restored = XmlModel.from_xml(serialized)

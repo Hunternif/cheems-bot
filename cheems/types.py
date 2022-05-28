@@ -50,6 +50,17 @@ class Channel(Target):
         return f'#{self.name}{server_part}'
 
 
+@dataclass(frozen=True)
+class Topic(Target):
+    """
+    Special target for building models of sentences related to a
+    certain keyword, e.g. 'Genshin Impact'
+    """
+    name: str
+    server: Optional[Server]
+    keywords: list[str] = field(default_factory=list)
+
+
 @dataclass
 class Message:
     server: Optional[Server]
