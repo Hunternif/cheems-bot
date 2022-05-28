@@ -2,6 +2,8 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from cheems.types import Target
+
 logger = logging.getLogger(__name__)
 
 ModelData = dict[str, dict[str, int]]
@@ -16,12 +18,15 @@ class Model:
     from_time: datetime
     to_time: datetime
     updated_time: datetime
-    server_id: int
-    target_id: int
+    target: Target
     description: str
     # E.g. { first_word: {next_word: 1}}
     # next_word includes punctuation attached to the preceding world, e.g. 'hello' - ',my'
     data: ModelData = field(default_factory=dict)
+
+    @property
+    def server_id(self) -> int:
+        return self.target.server_id
 
     @classmethod
     def parse_data(cls, text: str) -> ModelData:

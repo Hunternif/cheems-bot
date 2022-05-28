@@ -24,7 +24,7 @@ def _register_model(m: XmlModel):
     models.append(m)
     models_by_server.setdefault(m.server_id, {})
     models_by_target = models_by_server[m.server_id]
-    models_by_target[m.target_id] = m
+    models_by_target[m.target.id] = m
 
 
 def load_models():
@@ -57,7 +57,7 @@ def save_model(model: Model):
         subdir = os.path.join(root_dir, 'lost', dir_name)
         if not os.path.exists(subdir):
             os.makedirs(subdir)
-        filename = f'{model.target_id}.xml'
+        filename = f'{model.target.id}.xml'
         file_path = os.path.join(subdir, filename)
         xml_model.file_path = file_path
     with open(xml_model.file_path, 'w', encoding='utf-8') as f:
@@ -72,8 +72,7 @@ def create_model(target: Target) -> XmlModel:
         from_time=datetime.fromtimestamp(0),
         to_time=datetime.fromtimestamp(0),
         updated_time=datetime.now(),
-        server_id=target.server_id,
-        target_id=target.id,
+        target=target,
         description=str(target)
     )
     if isinstance(target, Server):

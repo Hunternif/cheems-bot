@@ -75,7 +75,7 @@ class TestMarkovModelsXml(TestCase):
 
     def test_load_and_save_model(self):
         m = models_xml.create_model(user1)
-        self.assertEqual(user1.id, m.target_id)
+        self.assertEqual(user1.id, m.target.id)
         self.assertEqual({}, m.data)
 
         m.append_word_pair('hello', 'world')

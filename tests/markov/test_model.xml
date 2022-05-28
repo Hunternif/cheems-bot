@@ -4,12 +4,20 @@
         from_time="2022-04-01 00:00:00"
         to_time="2022-05-15 00:00:00"
         updated_time="2022-05-15 00:00:00"
-        server_id="12345"
-        target_id="9999"
-        description="Hunternif's test data"
-><![CDATA[
+>
+    <target type="User">
+        <id>9999</id>
+        <name>Hunternif</name>
+        <discriminator>8888</discriminator>
+        <server>
+            <id>12345</id>
+            <name>Test server</name>
+        </server>
+    </target>
+    <description>Hunternif's test data</description>
+    <data><![CDATA[
 hello ,my 1
 my world 2
 world . 1
-]]>
+]]></data>
 </model>
