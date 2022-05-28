@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
+from xml.sax.saxutils import unescape
 
 from cheems.markov.model import Model
 from cheems.types import Target, User, Server, Channel, Topic
@@ -56,13 +57,14 @@ class XmlModel(Model):
         })
         _target_to_xml(root, self.target)
         ET.SubElement(root, 'description').text = self.description
-        ET.SubElement(root, 'data').text = f'\n{self.serialize_data()}\n'
-        raw_str = ET.tostring(root, 'utf-8', xml_declaration=True)
+        ET.SubElement(root, 'data').text = f'<![CDATA[\n{self.serialize_data()}\n]]>'
+        raw_bytes = ET.tostring(root, 'utf-8', xml_declaration=True)
+        raw_str = unescape(raw_bytes.decode())
         if pretty_print:
             dom = xml.dom.minidom.parseString(raw_str)
-            return bytes.decode(dom.toprettyxml(encoding='utf-8'))
+            return dom.toprettyxml(encoding='utf-8').decode()
         else:
-            return bytes.decode(raw_str)
+            return raw_str
 
 
 def _target_from_xml(tag: ET.Element) -> Target:
