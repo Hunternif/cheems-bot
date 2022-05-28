@@ -2,20 +2,18 @@ from datetime import datetime, timedelta
 from unittest import TestCase
 
 from cheems.markov.model import Model
-from cheems.types import Target
+from cheems.types import Target, Server
 
 
 def create_test_model(
         data_str: str = '',
-        server_id: int = 123,
-        target: Target = Target(0, 'test target'),
+        target: Target = Server(456, 'Test server'),
         description: str = 'Test model',
 ) -> Model:
     return Model(
         from_time=datetime.now() - timedelta(days=1),
         to_time=datetime.now(),
         updated_time=datetime.now(),
-        server_id=server_id,
         target=target,
         description=description,
         data=Model.parse_data(data_str)

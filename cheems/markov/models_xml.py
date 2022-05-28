@@ -12,19 +12,19 @@ from cheems.util import sanitize_filename
 logger = logging.getLogger(__name__)
 root_dir: str = config['markov_model_dir']
 
-ModelsByTarget = Dict[int, XmlModel]
+ModelsByTarget = Dict[Target, XmlModel]
 ModelsByServer = Dict[int, ModelsByTarget]
 
 # models are mapped by server id and then by target id
-models_by_server: ModelsByServer = {}
+models_by_server_id: ModelsByServer = {}
 models: list[XmlModel] = []
 
 
 def _register_model(m: XmlModel):
     models.append(m)
-    models_by_server.setdefault(m.server_id, {})
-    models_by_target = models_by_server[m.server_id]
-    models_by_target[m.target.id] = m
+    models_by_server_id.setdefault(m.server_id, {})
+    models_by_target = models_by_server_id[m.server_id]
+    models_by_target[m.target] = m
 
 
 def load_models():
@@ -57,7 +57,7 @@ def save_model(model: Model):
         subdir = os.path.join(root_dir, 'lost', dir_name)
         if not os.path.exists(subdir):
             os.makedirs(subdir)
-        filename = f'{model.target.id}.xml'
+        filename = f'{str(datetime.now())}.xml'
         file_path = os.path.join(subdir, filename)
         xml_model.file_path = file_path
     with open(xml_model.file_path, 'w', encoding='utf-8') as f:
@@ -105,21 +105,21 @@ def get_or_create_model(target: Target) -> XmlModel:
     """
     Finds an existing Markov model for this target, or creates a new one.
     """
-    if target.server_id not in models_by_server:
+    if target.server_id not in models_by_server_id:
         return create_model(target)
-    models_by_target = models_by_server[target.server_id]
-    if target.id not in models_by_target:
+    models_by_target = models_by_server_id[target.server_id]
+    if target not in models_by_target:
         return create_model(target)
-    return models_by_target[target.id]
+    return models_by_target[target]
 
 
 def get_model(target: Target) -> Optional[XmlModel]:
     """
     Finds an existing Markov model for this target, does not create new model.
     """
-    if target.server_id not in models_by_server:
+    if target.server_id not in models_by_server_id:
         return None
-    models_by_target = models_by_server[target.server_id]
-    if target.id not in models_by_target:
+    models_by_target = models_by_server_id[target.server_id]
+    if target not in models_by_target:
         return None
-    return models_by_target[target.id]
+    return models_by_target[target]

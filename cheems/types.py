@@ -6,28 +6,31 @@ from typing import Optional
 # Domain classes for modelling Discord interactions
 
 
-@dataclass
+@dataclass(frozen=True)
 class Target:
     """
     Base class for a Discord entity associated with a Model.
     E.g. if a Model models speech patterns of a user, this user is the target.
     """
-    id: int
-    name: str
 
     @property
     def server_id(self) -> int:
         return self.server.id if hasattr(self, 'server') else 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class Server(Target):
+    id: int
+    name: str
+
     def __str__(self):
         return f'{self.name}'
 
 
-@dataclass
+@dataclass(frozen=True)
 class User(Target):
+    id: int
+    name: str
     discriminator: int
     server: Optional[Server]
 
@@ -36,8 +39,10 @@ class User(Target):
         return f'@{self.name}#{self.discriminator}{server_part}'
 
 
-@dataclass
+@dataclass(frozen=True)
 class Channel(Target):
+    id: int
+    name: str
     server: Optional[Server]
 
     def __str__(self):

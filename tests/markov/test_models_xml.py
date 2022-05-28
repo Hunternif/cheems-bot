@@ -67,7 +67,7 @@ class TestMarkovModelsXml(TestCase):
         # clean old references
         reload(models_xml)
         self.assertEqual(0, len(models_xml.models))
-        self.assertEqual(0, len(models_xml.models_by_server))
+        self.assertEqual(0, len(models_xml.models_by_server_id))
         models_xml.load_models()
         for target, model in data:
             loaded_model = models_xml.get_model(target)
