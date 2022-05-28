@@ -131,6 +131,11 @@ hello ,my 1
 my dude 1
 '''.strip(), Model._serialize_data(data))
 
+    def test_train_model_on_empty_sentence(self):
+        data = Model.parse_data('')
+        train_model_on_sentence(data, '')
+        self.assertEqual(''.strip(), Model._serialize_data(data))
+
     def test_train_model_on_single_world(self):
         data = Model.parse_data('')
         train_model_on_sentence(data, 'hello')

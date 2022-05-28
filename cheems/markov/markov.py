@@ -62,6 +62,8 @@ def train_model_on_sentence(data: ModelData, sentence: str):
     Updates the model with word sequences from the given sentence.
     """
     words = _break_into_words(sentence)
+    if len(words) == 0:
+        return
     # ensure there is an END character at the end:
     if words[-1] not in ENDS:
         words.append(ENDS[0])
