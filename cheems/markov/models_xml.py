@@ -19,6 +19,9 @@ ModelsByServer = Dict[int, ModelsByTarget]
 models_by_server_id: ModelsByServer = {}
 models: list[XmlModel] = []
 
+# Discord epoch time
+EPOCH = datetime(year=2015, month=1, day=1)
+
 
 def _register_model(m: XmlModel):
     models.append(m)
@@ -69,8 +72,8 @@ def create_model(target: Target) -> XmlModel:
     Creates model file and return the new model
     """
     xml_model = XmlModel(
-        from_time=datetime.fromtimestamp(0),
-        to_time=datetime.fromtimestamp(0),
+        from_time=EPOCH,
+        to_time=EPOCH,
         updated_time=datetime.now(),
         target=target,
         description=str(target)
