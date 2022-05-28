@@ -100,10 +100,18 @@ second . 1
 
     def test_break_into_words(self):
         words = _break_into_words(
-            ' Hello, darkness   ,,\n my   old friend?! I... go \n home'
+            ' Hello, darkness   ,,\n my   old friend?! I... go \n home\n\n'
         )
         self.assertEqual([
             'Hello', ',darkness', ',my', 'old', 'friend', '?', 'I', '.', 'go', '.', 'home'
+        ], words)
+
+    def test_clean_punctuation(self):
+        words = _break_into_words(
+            '私は💩 ⚠ <\u200b@123> <:hi> <#general> •“пупа” —фыв.'
+        )
+        self.assertEqual([
+            '私は💩', '⚠', '<@123>', '<:hi>', '<#general>', 'пупа', 'фыв', '.'
         ], words)
 
     def test_train_model(self):

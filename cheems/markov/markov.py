@@ -8,9 +8,11 @@ from cheems.util import pairwise
 ENDS = '.?!'
 punctuation = '.,;:!?'
 punctuation_except_ENDS = ',;:'
+bad_punctuation = '`~^&*(){}[]-=+•“”"\'…—'  # keeping $/ for discord commands
 re_ENDS = re.escape(ENDS)
 re_punctuation = re.escape(punctuation)
 re_punctuation_except_END = re.escape(punctuation_except_ENDS)
+re_bad_punctuation = re.escape(bad_punctuation)
 
 
 def _canonical_form(word: str) -> str:
@@ -35,10 +37,15 @@ def _break_into_words(sentence: str) -> list[str]:
     Extracts a sequence of words from the sentence.
     Punctuation is stripped or formatted for the model.
     """
+    sentence = sentence.strip()
     # Line breaks are considered end characters:
     sentence = sentence.replace('\n', ENDS[0])
     # Clean whitespaces:
-    sentence = re.sub(r'\s+', ' ', sentence.strip())
+    sentence = re.sub(r'\s+', ' ', sentence)
+    # Remove bad punctuation:
+    sentence = re.sub(rf'[{re_bad_punctuation}]+', ' ', sentence)
+    # Remove other bad characters such as zero-width whitespace:
+    sentence = sentence.replace('\u200b', '')
     # Convert long strings of punctuation into a short one, e.g. ...->. ?!->?
     sentence = re.sub(rf'([{re_punctuation}]+)', lambda m: m.group(0)[0], sentence)
     # Ensure every end character is a separate word:
