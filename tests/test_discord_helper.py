@@ -61,7 +61,7 @@ class TestDiscordHelper(TestCase):
         self.assertEqual(server, target)
 
     def test_map_message(self):
-        d_msg = Mock(guild=d_server, author=d_user1, channel=d_channel, clean_content='Chinko!', created_at=time)
+        d_msg = Mock(guild=d_server, author=d_user1, channel=d_channel, system_content='Chinko!', created_at=time)
         msg = map_message(d_msg)
         self.assertEqual(Message(
             user=user1,
@@ -72,7 +72,7 @@ class TestDiscordHelper(TestCase):
         ), msg)
 
     def test_map_direct_message(self):
-        d_msg = MagicMock(author=d_user1, channel=d_dm_channel, clean_content='Chinko!', created_at=time)
+        d_msg = MagicMock(author=d_user1, channel=d_dm_channel, system_content='Chinko!', created_at=time)
         del d_msg.guild
         msg = map_message(d_msg)
         self.assertEqual(Message(

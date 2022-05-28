@@ -61,6 +61,13 @@ def train_model_on_sentence(data: ModelData, sentence: str):
     """
     Updates the model with word sequences from the given sentence.
     """
+    train_models_on_sentence([data], sentence)
+
+
+def train_models_on_sentence(models_data: list[ModelData], sentence: str):
+    """
+    Updates the given models with word sequences from the given sentence.
+    """
     words = _break_into_words(sentence)
     if len(words) == 0:
         return
@@ -71,8 +78,9 @@ def train_model_on_sentence(data: ModelData, sentence: str):
         w1 = _canonical_form(w1)
         if w1 in ENDS:
             continue
-        # noinspection PyProtectedMember
-        Model._append_word_pair(data, w1, w2)
+        for data in models_data:
+            # noinspection PyProtectedMember
+            Model._append_word_pair(data, w1, w2)
 
 
 def _pick_first_word(data: ModelData) -> str:
