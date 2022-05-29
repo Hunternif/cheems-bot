@@ -54,10 +54,11 @@ def extract_target(ctx: DiscordContext) -> Target:
             if target_name == word:
                 return target
 
-    # no mentions, use current channel
+    # try to find channel mentions:
     if len(msg.channel_mentions) > 0:
         return map_channel(msg.channel_mentions[0])
 
+    # no mentions, use current channel:
     return server
 
 
