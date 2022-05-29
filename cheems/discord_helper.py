@@ -82,6 +82,6 @@ def format_mention(target: Target) -> str:
     if isinstance(target, User):
         return f'<@{target.id}>'
     elif isinstance(target, Channel):
-        return f'<#{target.name}>'
+        return f'<#{target.id}>'
     else:
         return ''

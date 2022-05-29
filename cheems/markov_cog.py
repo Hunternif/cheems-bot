@@ -61,8 +61,14 @@ class MarkovCog(commands.Cog):
         target = extract_target(ctx)
         mention = format_mention(target)
         prompt = msg.text.replace('.cho_user', '').strip()
+
+        # remove the mention from the prompt
         if len(mention) > 0:
             prompt = prompt.replace(f'{mention}', '').strip()
+        if hasattr(target, 'name'):
+            target_name = target.name.lower()
+            if prompt.lower().startswith(target_name):
+                prompt = prompt[len(target_name):].strip()
         logger.info(f'{ctx.author.name} chomsed {target}: {prompt}')
 
         response = _continue_prompt(target, prompt)
