@@ -49,13 +49,13 @@ class TestDiscordHelper(TestCase):
         self.assertEqual(user2, target)
 
     def test_extract_target_channel(self):
-        msg = Mock(mentions=[], channel_mentions=[d_channel], guild=d_server)
+        msg = Mock(mentions=[], channel_mentions=[d_channel], guild=d_server, system_content='')
         ctx = Context(prefix='.', message=msg)
         target = extract_target(ctx)
         self.assertEqual(channel, target)
 
     def test_extract_target_server(self):
-        msg = Mock(mentions=[], channel_mentions=[], guild=d_server)
+        msg = Mock(mentions=[], channel_mentions=[], guild=d_server, system_content='')
         ctx = Context(prefix='.', message=msg)
         target = extract_target(ctx)
         self.assertEqual(server, target)

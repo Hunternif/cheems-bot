@@ -1,10 +1,11 @@
-from datetime import datetime
+import re
 from typing import Optional
 
-from discord import Message as DiscordMessage, Guild, Member, TextChannel, DMChannel
+from discord import Message as DiscordMessage, Guild
 from discord.ext.commands.context import Context as DiscordContext
 from discord.user import BaseUser
 
+from cheems.markov import models_xml
 from cheems.types import Server, Target, User, Channel, Message
 
 
@@ -26,6 +27,12 @@ def map_channel(ch) -> Channel:
         return Channel(id=int(ch.id), name=str(ch), server=None)
 
 
+def _simplify_word(word: str) -> str:
+    """Returns a version of the word for comparison, e.g. stripped of emoji."""
+    word = word.strip().lower()
+    return re.sub(r'\W+', '', word)
+
+
 def extract_target(ctx: DiscordContext) -> Target:
     """
     Returns the first applicable target from the Discord message.
@@ -39,6 +46,15 @@ def extract_target(ctx: DiscordContext) -> Target:
             continue
         return map_user(m, server)
 
+    # try to find a user without a mention:
+    word: str = _simplify_word(msg.system_content.replace('.che ', ''))
+    for target in models_xml.models_by_server_id.get(server.id, {}).keys():
+        if hasattr(target, 'name'):
+            target_name = _simplify_word(target.name)
+            if target_name == word:
+                return target
+
+    # no mentions, use current channel
     if len(msg.channel_mentions) > 0:
         return map_channel(msg.channel_mentions[0])
 
