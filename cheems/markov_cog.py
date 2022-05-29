@@ -4,12 +4,15 @@ from discord import Message
 from discord.ext import commands
 from discord.ext.commands import Bot, Context
 
+from cheems.config import config
 from cheems.discord_helper import extract_target, map_message, map_server
 from cheems.markov import models_xml
 from cheems.markov.markov import markov_chain, canonical_form
+from cheems.markov.model import ModelData
 from cheems.types import Server
 
 logger = logging.getLogger(__name__)
+markov_retry_hard_limit = 100
 
 
 class MarkovCog(commands.Cog):
@@ -73,12 +76,7 @@ def _continue_prompt(server: Server, prompt: str) -> str:
     model = models_xml.get_model(server)
     if model is None:
         return ''
-    chain = markov_chain(model.data, start=prompt)
-    if chain.strip() == prompt.strip():
-        # retry without the phrase:
-        chain = markov_chain(model.data)
-        return f'{prompt} {chain}'
-    return chain
+    return _markov_chain_with_retry(model.data, prompt)
 
 
 async def _reply_back(msg: Message):
@@ -91,7 +89,27 @@ async def _reply_back(msg: Message):
     model = models_xml.get_model(m.server)
     if model is None:
         return
-    chain = markov_chain(model.data, start=last_word)
-    if chain.strip() == last_word.strip():
-        return  # todo: maybe retry a few times
-    await msg.reply(chain)
+    response = _markov_chain_with_retry(model.data, last_word)
+    if len(response) > 0:
+        await msg.reply(response)
+
+
+def _markov_chain_with_retry(data: ModelData, prompt: str) -> str:
+    """
+    Reruns markov chain multiple times if it fails to do attempts.
+    Falls back to running without the prompt, and finally
+    falls back to empty string.
+    """
+    attempt_count = 0
+    limit = min(config.get('markov_retry_limit', markov_retry_hard_limit), markov_retry_hard_limit)
+    while attempt_count < limit:
+        chain = markov_chain(data, start=prompt)
+        if chain.strip() != prompt.strip():
+            return chain
+        attempt_count += 1
+        logger.info(f'Retry {str(attempt_count)} for prompt {prompt}')
+    # retry without the phrase
+    chain = markov_chain(data)
+    if chain.strip() == prompt.strip():
+        return ''
+    return f'{prompt} {chain}'
