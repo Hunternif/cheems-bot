@@ -66,6 +66,6 @@ def map_message(msg: DiscordMessage) -> Message:
     server = map_server(msg.guild) if hasattr(msg, 'guild') else None
     user = map_user(msg.author, server)
     channel = map_channel(msg.channel)
-    text = msg.system_content  # use raw content to include mentions
+    text = msg.system_content or ''  # use raw content to include mentions
     created_at = msg.created_at
     return Message(server, user, channel, text, created_at)

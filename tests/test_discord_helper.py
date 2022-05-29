@@ -82,3 +82,14 @@ class TestDiscordHelper(TestCase):
             text='Chinko!',
             created_at=time,
         ), msg)
+
+    def test_map_invalid_message(self):
+        d_msg = Mock(guild=d_server, author=d_user1, channel=d_channel, system_content=None, created_at=time)
+        msg = map_message(d_msg)
+        self.assertEqual(Message(
+            user=user1,
+            channel=channel,
+            server=server,
+            text='',
+            created_at=time,
+        ), msg)

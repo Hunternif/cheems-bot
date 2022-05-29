@@ -21,7 +21,7 @@ bot.remove_command('help')
 
 # todo: use mutex
 last_save_time: datetime = datetime.now()
-save_period = timedelta(minutes=15)
+save_period = timedelta(minutes=5)
 unsaved_models = set()
 
 
@@ -99,12 +99,13 @@ async def update_models_from_channel(
             count += 1
     except Exception as e:
         logger.exception(f'Error parsing channel {ch}: {e}')
+        return count
     if count > 0:
         logger.info(f'Fetched {count} messages from {ch}')
     else:
         logger.info(f'Finished fetching {ch.name}')
         models_xml.save_model(ch_model)
-        unsaved_models.remove(ch_model)
+        unsaved_models.discard(ch_model)
     return count
 
 
@@ -123,7 +124,7 @@ def train_models(models: list[Model], msg: Message):
 
 
 def _save_unsaved_models():
-    # save every 15 minutes:
+    """save all modified models periodically."""
     global last_save_time
     if datetime.now() > (last_save_time + save_period):
         unsaved_count = len(unsaved_models)
