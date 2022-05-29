@@ -114,6 +114,14 @@ second . 1
             '私は💩', '⚠', '<@123>', '<:hi>', '<#general>', 'пупа', 'фыв', '.'
         ], words)
 
+    def test_remove_urls(self):
+        words = _break_into_words(
+            'Check out https://google.com/trends, my dude'
+        )
+        self.assertEqual([
+            'Check', 'out', ',my', 'dude'
+        ], words)
+
     def test_train_model(self):
         data = Model.parse_data('''
 hello ,my 1

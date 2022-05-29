@@ -13,6 +13,7 @@ re_ENDS = re.escape(ENDS)
 re_punctuation = re.escape(punctuation)
 re_punctuation_except_END = re.escape(punctuation_except_ENDS)
 re_bad_punctuation = re.escape(bad_punctuation)
+url_pattern = re.compile(r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])')
 
 
 def _canonical_form(word: str) -> str:
@@ -38,6 +39,8 @@ def _break_into_words(sentence: str) -> list[str]:
     Punctuation is stripped or formatted for the model.
     """
     sentence = sentence.strip()
+    # Remove urls:
+    sentence = url_pattern.sub('', sentence)
     # Line breaks are considered end characters:
     sentence = sentence.replace('\n', ENDS[0])
     # Clean whitespaces:
