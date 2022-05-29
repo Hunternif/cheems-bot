@@ -5,7 +5,7 @@ from discord.ext import commands
 from discord.ext.commands import Bot, Context
 
 from cheems.config import config
-from cheems.discord_helper import extract_target, map_message, map_server, format_mention
+from cheems.discord_helper import extract_target, map_message, format_mention
 from cheems.markov import models_xml
 from cheems.markov.markov import markov_chain, canonical_form, strip_punctuation
 from cheems.markov.model import ModelData
@@ -104,8 +104,10 @@ class MarkovCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
         """If someone replies to the bot's message, continue the conversation"""
-        if msg.author.id == self.bot.user.id or msg.is_system():
+        if msg.author.id == self.bot.user.id or msg.is_system() \
+                or self._message_contains_command(msg):
             return
+
         # check if it's a reply to this bot
         if msg.reference is not None and \
                 msg.reference.resolved.author.id == self.bot.user.id:
@@ -121,6 +123,13 @@ class MarkovCog(commands.Cog):
                 if len(response) > 0:
                     await msg.channel.send(response)
                     await msg.delete()
+
+    def _message_contains_command(self, msg: Message) -> bool:
+        text: str = msg.system_content or ''
+        for command in self.bot.commands:
+            if text.find(f'{self.bot.command_prefix}{command.name} ') > -1:
+                return True
+        return False
 
 
 def _continue_prompt(target: Target, prompt: str) -> str:
