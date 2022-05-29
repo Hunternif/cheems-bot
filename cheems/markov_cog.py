@@ -43,7 +43,7 @@ class MarkovCog(commands.Cog):
         Uses server target.
         """
         msg = map_message(ctx.message)
-        prompt = msg.text.replace('.cho', '').strip()
+        prompt = get_command_argument(ctx)
         logger.info(f'{ctx.author.name} chomsed {prompt}')
 
         response = _continue_prompt(msg.server, prompt)
@@ -57,10 +57,9 @@ class MarkovCog(commands.Cog):
         `.cho_user @mention prompt` generate markov chain from prompt.
         Uses mentioned target.
         """
-        msg = map_message(ctx.message)
         target = extract_target(ctx)
         mention = format_mention(target)
-        prompt = msg.text.replace('.cho_user', '').strip()
+        prompt = get_command_argument(ctx)
 
         # remove the mention from the prompt
         if len(mention) > 0:
@@ -85,7 +84,7 @@ class MarkovCog(commands.Cog):
         Uses the server target.
         """
         msg = map_message(ctx.message)
-        prompt = msg.text.replace('.ask', '').strip()
+        prompt = get_command_argument(ctx)
         logger.info(f'{ctx.author.name} asked: {prompt}')
         await _ask(ctx, msg.server, prompt)
 
@@ -96,8 +95,7 @@ class MarkovCog(commands.Cog):
         Use the mentioned target.
         """
         target = extract_target(ctx)
-        msg = map_message(ctx.message)
-        prompt = msg.text.replace('.ask_user', '').strip()
+        prompt = get_command_argument(ctx)
         logger.info(f'{ctx.author.name} asked {target}: {prompt}')
         await _ask(ctx, target, prompt)
 
@@ -186,3 +184,10 @@ async def _ask(ctx: Context, target: Target, prompt: str):
         if isinstance(target, User):
             response = f'{target.name}: {response}'
         await ctx.message.reply(response)
+
+
+def get_command_argument(ctx: Context) -> str:
+    text: str = ctx.message.system_content or ''
+    if ctx.command is not None:
+        text = text.replace(f'{ctx.prefix}{ctx.command.name}', '', 1).strip()
+    return text
