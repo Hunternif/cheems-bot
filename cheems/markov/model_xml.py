@@ -19,6 +19,9 @@ XML_FORMAT_VERSION = 1
 class XmlModel(Model):
     file_path: Optional[str] = None
 
+    def __hash__(self) -> int:
+        return hash(self.target)
+
     @classmethod
     def from_model(cls, model: Model, file_path: str = None) -> 'XmlModel':
         return cls(**model.__dict__, file_path=file_path)

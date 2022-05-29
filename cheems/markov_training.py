@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from discord import TextChannel
 
@@ -17,6 +17,12 @@ logger = logging.getLogger('training')
 models_xml.load_models()
 bot = commands.Bot(command_prefix='.')
 bot.remove_command('help')
+
+
+# todo: use mutex
+last_save_time: datetime = datetime.now()
+save_period = timedelta(minutes=15)
+unsaved_models = set()
 
 
 @bot.event
@@ -51,8 +57,6 @@ async def continuously_update_models_from_channel(discord_channel: TextChannel):
         await asyncio.create_task(
             continuously_update_models_from_channel(discord_channel)
         )
-    else:
-        logger.info(f'Finished fetching {ch.name}')
 
 
 async def update_models_from_channel(
@@ -76,6 +80,7 @@ async def update_models_from_channel(
         return 0
 
     count = 0
+    models = [ch_model, server_model]
     try:
         history = discord_channel.history(
             limit=config['training']['message_limit'],
@@ -85,18 +90,34 @@ async def update_models_from_channel(
         async for discord_message in history:
             msg = map_message(discord_message)
             user_model = models_xml.get_or_create_model(msg.user)
-            models = [ch_model, server_model]
             if is_name_allowed(user_config, msg.user.name):
                 models.append(user_model)
-            train_and_save_models(models, msg)
+            train_models(models, msg)
             count += 1
     except Exception as e:
         logger.exception(f'Error parsing channel {ch}: {e}')
-    logger.info(f'Fetched {count} messages from {ch}')
+    if count > 0:
+        logger.info(f'Fetched {count} messages from {ch}')
+        for model in models:
+            unsaved_models.add(model)
+        # save every 15 minutes:
+        global last_save_time
+        if datetime.now() > (last_save_time + save_period):
+            unsaved_count = len(unsaved_models)
+            while len(unsaved_models) > 0:
+                model = unsaved_models.pop()
+                models_xml.save_model(model)
+            last_save_time = datetime.now()
+            logger.info(f'Saved {unsaved_count} models')
+    else:
+        logger.info(f'Finished fetching {ch.name}')
+        for model in models:
+            models_xml.save_model(model)
+            unsaved_models.remove(model)
     return count
 
 
-def train_and_save_models(models: list[Model], msg: Message):
+def train_models(models: list[Model], msg: Message):
     """
     Update content and time of models based on the message.
     """
@@ -108,7 +129,6 @@ def train_and_save_models(models: list[Model], msg: Message):
         if model.to_time < msg.created_at:
             model.to_time = msg.created_at
         model.updated_time = datetime.now()
-        models_xml.save_model(model)
 
 
 if __name__ == '__main__':
