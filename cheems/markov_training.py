@@ -57,6 +57,7 @@ async def continuously_update_models_from_channel(discord_channel: TextChannel):
         await asyncio.create_task(
             continuously_update_models_from_channel(discord_channel)
         )
+    _save_unsaved_models()
 
 
 async def update_models_from_channel(
@@ -80,7 +81,6 @@ async def update_models_from_channel(
         return 0
 
     count = 0
-    models = [ch_model, server_model]
     try:
         history = discord_channel.history(
             limit=config['training']['message_limit'],
@@ -88,32 +88,23 @@ async def update_models_from_channel(
             oldest_first=True,
         )
         async for discord_message in history:
+            models = [ch_model, server_model]
             msg = map_message(discord_message)
             user_model = models_xml.get_or_create_model(msg.user)
             if is_name_allowed(user_config, msg.user.name):
                 models.append(user_model)
             train_models(models, msg)
+            for model in models:
+                unsaved_models.add(model)
             count += 1
     except Exception as e:
         logger.exception(f'Error parsing channel {ch}: {e}')
     if count > 0:
         logger.info(f'Fetched {count} messages from {ch}')
-        for model in models:
-            unsaved_models.add(model)
-        # save every 15 minutes:
-        global last_save_time
-        if datetime.now() > (last_save_time + save_period):
-            unsaved_count = len(unsaved_models)
-            while len(unsaved_models) > 0:
-                model = unsaved_models.pop()
-                models_xml.save_model(model)
-            last_save_time = datetime.now()
-            logger.info(f'Saved {unsaved_count} models')
     else:
         logger.info(f'Finished fetching {ch.name}')
-        for model in models:
-            models_xml.save_model(model)
-            unsaved_models.remove(model)
+        models_xml.save_model(ch_model)
+        unsaved_models.remove(ch_model)
     return count
 
 
@@ -129,6 +120,18 @@ def train_models(models: list[Model], msg: Message):
         if model.to_time < msg.created_at:
             model.to_time = msg.created_at
         model.updated_time = datetime.now()
+
+
+def _save_unsaved_models():
+    # save every 15 minutes:
+    global last_save_time
+    if datetime.now() > (last_save_time + save_period):
+        unsaved_count = len(unsaved_models)
+        while len(unsaved_models) > 0:
+            model = unsaved_models.pop()
+            models_xml.save_model(model)
+        last_save_time = datetime.now()
+        logger.info(f'Saved {unsaved_count} models')
 
 
 if __name__ == '__main__':
