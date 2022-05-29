@@ -41,7 +41,7 @@ def _break_into_words(sentence: str) -> list[str]:
     # Line breaks are considered end characters:
     sentence = sentence.replace('\n', ENDS[0])
     # Clean whitespaces:
-    sentence = re.sub(r'\s+', ' ', sentence)
+    sentence = re.sub(r'[ᅟ\s]+', ' ', sentence)
     # Remove bad punctuation:
     sentence = re.sub(rf'[{re_bad_punctuation}]+', ' ', sentence)
     # Remove other bad characters such as zero-width whitespace:
