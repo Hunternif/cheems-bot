@@ -47,12 +47,17 @@ def extract_target(ctx: DiscordContext) -> Target:
         return map_user(m, server)
 
     # try to find a user without a mention:
-    word: str = _simplify_word(msg.system_content.replace('.che ', ''))
-    for target in models_xml.models_by_server_id.get(server.id, {}).keys():
-        if hasattr(target, 'name'):
-            target_name = _simplify_word(target.name)
-            if target_name == word:
-                return target
+    text: str = msg.system_content or ''
+    words = re.split(r'\s+', text)
+    if len(words) > 1:
+        # assuming the first word is the command,
+        # and the 1st argument is the mention
+        maybe_mention = _simplify_word(words[1])
+        for target in models_xml.models_by_server_id.get(server.id, {}).keys():
+            if hasattr(target, 'name'):
+                target_name = _simplify_word(target.name)
+                if target_name == maybe_mention:
+                    return target
 
     # try to find channel mentions:
     if len(msg.channel_mentions) > 0:
@@ -70,3 +75,13 @@ def map_message(msg: DiscordMessage) -> Message:
     text = msg.system_content or ''  # use raw content to include mentions
     created_at = msg.created_at
     return Message(server, user, channel, text, created_at)
+
+
+def format_mention(target: Target) -> str:
+    """Returns the Discord mention of this target"""
+    if isinstance(target, User):
+        return f'<@{target.id}>'
+    elif isinstance(target, Channel):
+        return f'<#{target.name}>'
+    else:
+        return ''

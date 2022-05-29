@@ -1,10 +1,12 @@
 from datetime import datetime
+from importlib import reload
 from unittest import TestCase
 from unittest.mock import Mock, MagicMock
 
 from discord.ext.commands import Context
 
 from cheems.discord_helper import extract_target, map_message
+from cheems.markov import models_xml
 from cheems.types import User, Server, Channel, Message
 
 # test data: Discord objects
@@ -35,6 +37,11 @@ class TestDiscordHelper(TestCase):
         del d_dm_channel.created_at
         d_dm_channel.__str__ = Mock(return_value='Direct channel name')
         d_server.configure_mock(id=789, name='My server', me=d_bot)
+
+    def setUp(self) -> None:
+        # Reload models_xml.py because the directory in the config changed,
+        # and to clean old references to saved models
+        reload(models_xml)
 
     def test_extract_target_first_user(self):
         msg = Mock(mentions=[d_user1, d_user2], guild=d_server)
@@ -93,3 +100,21 @@ class TestDiscordHelper(TestCase):
             text='',
             created_at=time,
         ), msg)
+
+    def test_extract_mention_from_simple_name(self):
+        models_xml.create_model(user1)
+        msg = Mock(mentions=[], channel_mentions=[], guild=d_server, system_content='.che kagamin')
+        ctx = Context(prefix='.', message=msg)
+        self.assertEqual(user1, extract_target(ctx))
+
+    def test_extract_mention_from_simple_name_with_extra_words(self):
+        models_xml.create_model(user1)
+        msg = Mock(mentions=[], channel_mentions=[], guild=d_server, system_content='.cho kagamin хаха')
+        ctx = Context(prefix='.', message=msg)
+        self.assertEqual(user1, extract_target(ctx))
+
+    def test_extract_mention_only_in_2nd_position(self):
+        models_xml.create_model(user1)
+        msg = Mock(mentions=[], channel_mentions=[], guild=d_server, system_content='kagamin хаха')
+        ctx = Context(prefix='.', message=msg)
+        self.assertEqual(server, extract_target(ctx))
