@@ -17,7 +17,7 @@ re_bad_punctuation = re.escape(bad_punctuation)
 url_pattern = re.compile(r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])')
 
 
-def _canonical_form(word: str) -> str:
+def canonical_form(word: str) -> str:
     """
     Returns the canonical form of the word: lowercase, no whitespace, no punctuation.
     This form is used as key in the data dictionary.
@@ -88,7 +88,7 @@ def train_models_on_sentence(models_data: list[ModelData], sentence: str):
     if words[-1] not in ENDS:
         words.append(ENDS[0])
     for w1, w2 in pairwise(words):
-        w1 = _canonical_form(w1)
+        w1 = canonical_form(w1)
         if w1 in ENDS:
             continue
         for data in models_data:
@@ -118,7 +118,7 @@ def _pick_next_word(data: ModelData, first_word: str) -> str:
     :return: Word including space and punctuation, e.g. ' word' or ', word'.
     """
     # drop punctuation from first_word:
-    first_word = _canonical_form(first_word)
+    first_word = canonical_form(first_word)
 
     next_words = data[first_word] if first_word in data else []
     if len(next_words) == 0:
