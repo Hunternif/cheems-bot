@@ -30,8 +30,6 @@ def canonical_form(word: str) -> str:
     This form is used as key in the data dictionary.
     """
     word = word.lower().strip()
-    if len(word) == 0:
-        return ENDS[0]
     if word in ENDS:
         return word
     word = strip_punctuation(word)

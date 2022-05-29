@@ -58,17 +58,9 @@ class MarkovCog(commands.Cog):
         Uses mentioned target.
         """
         target = extract_target(ctx)
-        mention = format_mention(target)
         prompt = get_command_argument(ctx)
-
-        # remove the mention from the prompt
-        if len(mention) > 0:
-            prompt = prompt.replace(f'{mention}', '').strip()
-        if hasattr(target, 'name'):
-            target_name = target.name.lower()
-            if prompt.lower().startswith(target_name):
-                prompt = prompt[len(target_name):].strip()
         logger.info(f'{ctx.author.name} chomsed {target}: {prompt}')
+        prompt = remove_mention(prompt, target)
 
         response = _continue_prompt(target, prompt)
         if len(response) > 0:
@@ -97,6 +89,7 @@ class MarkovCog(commands.Cog):
         target = extract_target(ctx)
         prompt = get_command_argument(ctx)
         logger.info(f'{ctx.author.name} asked {target}: {prompt}')
+        prompt = remove_mention(prompt, target)
         await _ask(ctx, target, prompt)
 
     @commands.Cog.listener()
@@ -190,4 +183,16 @@ def get_command_argument(ctx: Context) -> str:
     text: str = ctx.message.system_content or ''
     if ctx.command is not None:
         text = text.replace(f'{ctx.prefix}{ctx.command.name}', '', 1).strip()
+    return text
+
+
+def remove_mention(text: str, target: Target) -> str:
+    """Removes both ids <@123> and name of the target"""
+    mention = format_mention(target)
+    if len(mention) > 0:
+        text = text.replace(f'{mention}', '').strip()
+    if hasattr(target, 'name'):
+        target_name = target.name.lower()
+        if text.lower().startswith(target_name):
+            text = text[len(target_name):].strip()
     return text
