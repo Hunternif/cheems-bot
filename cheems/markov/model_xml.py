@@ -7,7 +7,7 @@ from typing import Optional
 from xml.sax.saxutils import unescape
 
 from cheems.markov.model import Model
-from cheems.types import Target, User, Server, Channel, Topic
+from cheems.targets import Target, User, Server, Channel, Topic
 
 logger = logging.getLogger(__name__)
 

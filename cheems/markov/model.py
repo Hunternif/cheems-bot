@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from cheems.types import Target
+from cheems.targets import Target
 
 logger = logging.getLogger(__name__)
 

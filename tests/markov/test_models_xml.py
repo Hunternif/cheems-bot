@@ -6,7 +6,7 @@ from unittest import TestCase
 from cheems.config import config
 from cheems.markov import models_xml
 from cheems.markov.model_xml import XmlModel
-from cheems.types import User, Server, Channel
+from cheems.targets import User, Server, Channel
 
 # test data
 server1 = Server(100, 'London')

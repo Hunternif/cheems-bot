@@ -6,7 +6,7 @@ from discord.ext.commands.context import Context as DiscordContext
 from discord.user import BaseUser
 
 from cheems.markov import models_xml
-from cheems.types import Server, Target, User, Channel, Message
+from cheems.targets import Server, Target, User, Channel, Message
 
 
 def map_server(guild: Optional[Guild]) -> Optional[Server]:

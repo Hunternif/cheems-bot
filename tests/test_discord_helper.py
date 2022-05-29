@@ -7,7 +7,7 @@ from discord.ext.commands import Context
 
 from cheems.discord_helper import extract_target, map_message
 from cheems.markov import models_xml
-from cheems.types import User, Server, Channel, Message
+from cheems.targets import User, Server, Channel, Message
 
 # test data: Discord objects
 d_user1 = Mock()

@@ -11,7 +11,7 @@ from cheems.discord_helper import map_channel, map_message, map_server
 from cheems.markov import models_xml
 from cheems.markov.markov import train_models_on_sentence
 from cheems.markov.model import Model
-from cheems.types import Message
+from cheems.targets import Message
 
 logger = logging.getLogger('training')
 models_xml.load_models()

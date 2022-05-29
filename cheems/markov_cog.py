@@ -9,7 +9,7 @@ from cheems.discord_helper import extract_target, map_message, format_mention
 from cheems.markov import models_xml
 from cheems.markov.markov import markov_chain, canonical_form, strip_punctuation
 from cheems.markov.model import ModelData
-from cheems.types import Server, Target, User
+from cheems.targets import Server, Target, User
 
 logger = logging.getLogger(__name__)
 markov_retry_hard_limit = 100

@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime
 
 from cheems.markov.model_xml import XmlModel
-from cheems.types import User, Server, Channel, Topic
+from cheems.targets import User, Server, Channel, Topic
 
 test_server = Server(12345, 'Test server')
 test_model = XmlModel(

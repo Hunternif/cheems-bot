@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from unittest import TestCase
 
 from cheems.markov.model import Model
-from cheems.types import Target, Server
+from cheems.targets import Target, Server
 
 
 def create_test_model(

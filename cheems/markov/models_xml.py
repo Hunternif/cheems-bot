@@ -6,7 +6,7 @@ from typing import Dict, Optional
 from cheems.config import config
 from cheems.markov.model import Model
 from cheems.markov.model_xml import XmlModel
-from cheems.types import Target, Server, Channel, User
+from cheems.targets import Target, Server, Channel, User
 from cheems.util import sanitize_filename
 
 logger = logging.getLogger(__name__)
