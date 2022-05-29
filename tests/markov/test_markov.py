@@ -114,6 +114,14 @@ second . 1
             '私は💩', '⚠', '<@123>', '<:hi>', '<#general>', 'пупа', 'фыв', '.'
         ], words)
 
+    def test_fix_broken_discord_mentions(self):
+        words = _break_into_words(
+            '<\u200b@123> <: 456> <# general> <@ Hunternif#317>'
+        )
+        self.assertEqual([
+            '<@123>', '<:456>', '<#general>', '<@Hunternif#317>'
+        ], words)
+
     def test_remove_urls(self):
         words = _break_into_words(
             'Check out https://google.com/trends, my dude'
