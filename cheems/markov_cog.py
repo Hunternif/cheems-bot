@@ -41,38 +41,57 @@ class MarkovCog(commands.Cog):
         logger.info(f'{ctx.author.name} chomsed {prompt}')
 
         server = map_server(ctx.guild)
-        model = models_xml.get_model(server)
-        if model is None:
-            return
-
-        chain = markov_chain(model.data, start=prompt)
-        out_text = chain
-        if chain.strip() == prompt.strip():
-            # retry without the phrase:
-            chain = markov_chain(model.data)
-            out_text = f'{prompt} {chain}'
-        await ctx.send(out_text)
-        await ctx.message.delete()
+        response = _continue_prompt(server, prompt)
+        if len(response) > 0:
+            await ctx.send(response)
+            await ctx.message.delete()
 
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
         """If someone replies to the bot's message, continue the conversation"""
-        if msg.author.id == self.bot.user.id:
+        if msg.author.id == self.bot.user.id or msg.is_system():
             return
-        if msg.is_system() or msg.reference is None:
+        # check if it's a reply to this bot
+        if msg.reference is not None and \
+                msg.reference.resolved.author.id == self.bot.user.id:
+            await _reply_back(msg)
             return
-        if msg.reference.resolved.author.id != self.bot.user.id:
-            return
-        # someone replied to the bot
+        # check if it's a mention of this bot. It acts like `cho`.
         m = map_message(msg)
-        if m.server is None:
-            return  # can't reply outside of server
-        logger.info(f'{msg.author.name} replied {m.text}')
-        last_word = canonical_form(m.text.split(' ')[-1])
-        model = models_xml.get_model(m.server)
-        if model is None:
-            return
-        chain = markov_chain(model.data, start=last_word)
-        if chain.strip() == last_word.strip():
-            return  # todo: maybe retry a few times
-        await msg.reply(chain)
+        for mention in msg.mentions:
+            if mention.id == self.bot.user.id:
+                prompt = m.text.replace(f'<@{self.bot.user.id}>', '').strip()
+                logger.info(f'{msg.author.name} chomsed {prompt}')
+                response = _continue_prompt(m.server, prompt)
+                if len(response) > 0:
+                    await msg.channel.send(response)
+                    await msg.delete()
+
+
+def _continue_prompt(server: Server, prompt: str) -> str:
+    """Returns empty string if could not continue."""
+    model = models_xml.get_model(server)
+    if model is None:
+        return ''
+    chain = markov_chain(model.data, start=prompt)
+    if chain.strip() == prompt.strip():
+        # retry without the phrase:
+        chain = markov_chain(model.data)
+        return f'{prompt} {chain}'
+    return chain
+
+
+async def _reply_back(msg: Message):
+    """Reply to the message by continuing the Markov chain from the last word."""
+    m = map_message(msg)
+    if m.server is None:
+        return  # can't reply outside of server
+    logger.info(f'{msg.author.name} replied {m.text}')
+    last_word = canonical_form(m.text.split(' ')[-1])
+    model = models_xml.get_model(m.server)
+    if model is None:
+        return
+    chain = markov_chain(model.data, start=last_word)
+    if chain.strip() == last_word.strip():
+        return  # todo: maybe retry a few times
+    await msg.reply(chain)

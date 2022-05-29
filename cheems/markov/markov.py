@@ -27,8 +27,8 @@ def canonical_form(word: str) -> str:
         return ENDS[0]
     if word in ENDS:
         return word
-    if word[0] in punctuation:
-        word = word[1:].strip()
+    word = re.sub(rf'^[{re_punctuation}]+', '', word).strip()
+    word = re.sub(rf'[{re_punctuation}]+$', '', word).strip()
     if len(word) == 0:
         return ENDS[0]
     return word
