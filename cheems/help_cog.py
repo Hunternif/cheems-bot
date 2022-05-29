@@ -12,13 +12,14 @@ class HelpCog(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def help(self, ctx: Context):
+    async def help4(self, ctx: Context):
         embed = discord.Embed(
             title='Cheems bot',
             description='''
 `.che` - генерирует рандомную фразу из всего сервера.
 `.che #канал` - генерирует рандомную фразу из канала.
 `.che @никнейм` или `.che никнейм` - генерирует рандомную фразу из сообщений человека.
+`.help4` - показывает эту справку.
 '''.strip(),
             color=0xd19d2e
         )
