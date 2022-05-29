@@ -3,7 +3,7 @@ import logging
 from discord.ext import commands
 from discord.ext.commands import Bot, Context
 
-from cheems.discord_helper import extract_target, map_message, format_mention
+from cheems.discord_helper import extract_target, map_message, map_server
 from cheems.markov import models_xml
 from cheems.markov.markov import markov_chain
 from cheems.types import Server
@@ -17,6 +17,7 @@ class MarkovCog(commands.Cog):
 
     @commands.command()
     async def che(self, ctx: Context):
+        """`.che @user/#channel` generate markov chain"""
         target = extract_target(ctx)
         logger.info(f'{ctx.author.name} cheemsed {target}')
         model = models_xml.get_model(target)
@@ -33,28 +34,21 @@ class MarkovCog(commands.Cog):
 
     @commands.command()
     async def cho(self, ctx: Context):
+        """`.cho prompt` generate markov chain from prompt"""
         msg = map_message(ctx.message)
-        text = msg.text.replace('.cho', '').strip()
-        logger.info(f'{ctx.author.name} chomsed {text}')
+        prompt = msg.text.replace('.cho', '').strip()
+        logger.info(f'{ctx.author.name} chomsed {prompt}')
 
-        target = extract_target(ctx)
-        mention = format_mention(target)
-        if len(mention) > 0:
-            text = text.replace(f'{mention}', '').strip()
-
-        model = models_xml.get_model(target)
+        server = map_server(ctx.guild)
+        model = models_xml.get_model(server)
         if model is None:
             return
 
-        chain = markov_chain(model.data, start=text)
-        if chain.strip() == text.strip():
-            # didn't add anything new
-            return
-        if isinstance(target, Server):
-            out_text = chain
-        elif hasattr(target, 'name'):
-            out_text = f'{target.name}: {chain}'
-        else:
-            out_text = chain
+        chain = markov_chain(model.data, start=prompt)
+        out_text = chain
+        if chain.strip() == prompt.strip():
+            # retry without the phrase:
+            chain = markov_chain(model.data)
+            out_text = f'{prompt} {chain}'
         await ctx.send(out_text)
         await ctx.message.delete()
