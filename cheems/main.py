@@ -5,6 +5,7 @@ from discord.ext.commands import Context
 from cheems.config import config
 from discord.ext import commands
 
+from cheems.help_cog import HelpCog
 from cheems.markov import models_xml
 from cheems.markov_cog import MarkovCog
 
@@ -13,6 +14,7 @@ models_xml.load_models()
 bot = commands.Bot(command_prefix='.')
 bot.remove_command('help')
 bot.add_cog(MarkovCog(bot))
+bot.add_cog(HelpCog(bot))
 
 
 # Runs when Bot Successfully Connects
@@ -25,7 +27,7 @@ async def on_ready():
 async def on_command_error(ctx: Context, error):
     # don't log errors for commands from other bots
     if ctx.cog is not None:
-        logger.exception(f'{ctx.cog.qualified_name} error')
+        logger.error(f'{ctx.cog.qualified_name} error: {error}')
 
 
 try:
