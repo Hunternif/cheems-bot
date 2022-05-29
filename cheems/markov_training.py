@@ -27,22 +27,42 @@ async def on_ready():
 
 async def train():
     for guild in bot.guilds:
-        server_model = models_xml.get_or_create_model(map_server(guild))
         for discord_channel in guild.channels:
             if isinstance(discord_channel, TextChannel):
-                ch_model = models_xml.get_or_create_model(map_channel(discord_channel))
-                # find the earliest time from which to update
-                from_time = min(server_model.to_time, ch_model.to_time)
-                await asyncio.create_task(update_models_from_channel(discord_channel, from_time))
+                await asyncio.create_task(
+                    continuously_update_models_from_channel(discord_channel)
+                )
+
+
+async def continuously_update_models_from_channel(discord_channel: TextChannel):
+    """
+    Recursively runs `update_models_from_channel` until there are no more messages
+    """
+    ch = map_channel(discord_channel)
+    ch_model = models_xml.get_or_create_model(ch)
+    server_model = models_xml.get_or_create_model(ch.server)
+    # find the earliest time from which to update
+    from_time = min(server_model.to_time, ch_model.to_time)
+    num_fetched = await asyncio.create_task(
+        update_models_from_channel(discord_channel, from_time)
+    )
+    if num_fetched > 0:
+        await asyncio.sleep(config['training'].get('wait_sec', 0))
+        await asyncio.create_task(
+            continuously_update_models_from_channel(discord_channel)
+        )
+    else:
+        logger.info(f'Finished fetching {ch.name}')
 
 
 async def update_models_from_channel(
         discord_channel: TextChannel,
         from_time: datetime
-):
+) -> int:
     """
     Fetches a batch of messages from the channel after the given time,
     and updates all models relevant to that server, channel, user etc.
+    :return: the number of messages fetched
     """
     ch = map_channel(discord_channel)
     ch_model = models_xml.get_or_create_model(ch)
@@ -53,7 +73,7 @@ async def update_models_from_channel(
     channel_config = server_config.get('channels', {})
     user_config = server_config.get('users', {})
     if not is_name_allowed(channel_config, ch.name):
-        return
+        return 0
 
     count = 0
     try:
@@ -73,7 +93,7 @@ async def update_models_from_channel(
     except Exception as e:
         logger.exception(f'Error parsing channel {ch}: {e}')
     logger.info(f'Fetched {count} messages from {ch}')
-
+    return count
 
 
 def train_and_save_models(models: list[Model], msg: Message):

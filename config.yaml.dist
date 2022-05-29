@@ -4,6 +4,7 @@ markov_model_dir: ~/cheems_markov_models
 
 training:
   message_limit: 100
+  wait_sec: 1
   servers:
     My server name:
       channels:
