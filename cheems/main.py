@@ -6,13 +6,13 @@ from cheems.config import config
 from discord.ext import commands
 
 from cheems.markov import models_xml
-from cheems.text_gen_cog import TextGenCog
+from cheems.markov_cog import MarkovCog
 
 logger = logging.getLogger('cheems')
 models_xml.load_models()
 bot = commands.Bot(command_prefix='.')
 bot.remove_command('help')
-bot.add_cog(TextGenCog(bot))
+bot.add_cog(MarkovCog(bot))
 
 
 # Runs when Bot Successfully Connects
