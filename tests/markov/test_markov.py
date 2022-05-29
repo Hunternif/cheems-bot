@@ -14,7 +14,7 @@ my world 1
 world . 1
         ''')
         s = markov_chain(data, 'hello')
-        self.assertEqual('hello, my world.', s)
+        self.assertEqual('hello, my world', s)
 
     def test_various_ends(self):
         data = Model.parse_data('''
@@ -30,7 +30,7 @@ hello ,my 1
 my world 1
         ''')
         s = markov_chain(data, 'hello')
-        self.assertEqual('hello, my world.', s)
+        self.assertEqual('hello, my world', s)
 
     def test_weighted_chain(self):
         data = Model.parse_data('''
@@ -42,9 +42,9 @@ hello darkness 10
         for x in range(100):
             random.seed(x)
             s = markov_chain(data, 'hello')
-            if s == 'hello world.':
+            if s == 'hello world':
                 count_world += 1
-            elif s == 'hello darkness.':
+            elif s == 'hello darkness':
                 count_darkness += 1
         self.assertGreater(count_darkness, count_world * 5)
 
@@ -63,7 +63,7 @@ world . 1
         ''')
         random.seed(1)
         s = markov_chain(data, '  ')
-        self.assertEqual('hello, my world.', s)
+        self.assertEqual('hello, my world', s)
 
     def test_empty_model(self):
         data = Model.parse_data('')

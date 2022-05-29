@@ -6,6 +6,7 @@ from cheems.util import pairwise
 
 # these characters indicate end of a sentence
 ENDS = '.?!'
+omitted_ends = '.'  # characters that are too boring and should be trimmed
 punctuation = '.,;:!?'
 punctuation_except_ENDS = ',;:'
 bad_punctuation = '`~^&*(){}[]-=+•“”"\'…—'  # keeping $/ for discord commands
@@ -165,6 +166,8 @@ def markov_chain(data: ModelData, start: str = '', limit: int = 50) -> str:
     count = 1
     while count < limit:
         next_word = _pick_next_word(data, last_word)
+        if next_word in omitted_ends:
+            break  # '.' is too boring, so skip it
         result += next_word
         count += 1
         last_word = next_word
