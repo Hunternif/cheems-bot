@@ -17,6 +17,13 @@ re_bad_punctuation = re.escape(bad_punctuation)
 url_pattern = re.compile(r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])')
 
 
+def strip_punctuation(text: str) -> str:
+    """Strips punctuation from both ends."""
+    text = re.sub(rf'^[{re_punctuation}]+', '', text).strip()
+    text = re.sub(rf'[{re_punctuation}]+$', '', text).strip()
+    return text
+
+
 def canonical_form(word: str) -> str:
     """
     Returns the canonical form of the word: lowercase, no whitespace, no punctuation.
@@ -27,8 +34,7 @@ def canonical_form(word: str) -> str:
         return ENDS[0]
     if word in ENDS:
         return word
-    word = re.sub(rf'^[{re_punctuation}]+', '', word).strip()
-    word = re.sub(rf'[{re_punctuation}]+$', '', word).strip()
+    word = strip_punctuation(word)
     if len(word) == 0:
         return ENDS[0]
     return word
@@ -150,7 +156,7 @@ def markov_chain(data: ModelData, start: str = '', limit: int = 50) -> str:
     :param limit: maximum number of words.
     :return:
     """
-    result = start.strip()
+    result = strip_punctuation(start)
 
     # pick the first word to begin the chain
     first_word = start.strip().split(' ')[-1]

@@ -7,7 +7,7 @@ from discord.ext.commands import Bot, Context
 from cheems.config import config
 from cheems.discord_helper import extract_target, map_message, map_server
 from cheems.markov import models_xml
-from cheems.markov.markov import markov_chain, canonical_form
+from cheems.markov.markov import markov_chain, canonical_form, strip_punctuation
 from cheems.markov.model import ModelData
 from cheems.types import Server
 
@@ -48,6 +48,25 @@ class MarkovCog(commands.Cog):
         if len(response) > 0:
             await ctx.send(response)
             await ctx.message.delete()
+
+    @commands.command()
+    async def ask(self, ctx: Context):
+        """
+        `.ask prompt` will try to reply to the prompt's last word.
+        Tries to use the mentioned target too.
+        """
+        target = extract_target(ctx)
+        msg = map_message(ctx.message)
+        prompt = msg.text.replace('.ask', '').strip()
+        logger.info(f'{ctx.author.name} asked {target}: {prompt}')
+
+        last_word = canonical_form(prompt.split(' ')[-1])
+        model = models_xml.get_model(target)
+        if model is None:
+            return
+        response = _markov_chain_with_retry(model.data, last_word)
+        if len(response) > 0:
+            await ctx.message.reply(response)
 
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
@@ -104,12 +123,12 @@ def _markov_chain_with_retry(data: ModelData, prompt: str) -> str:
     limit = min(config.get('markov_retry_limit', markov_retry_hard_limit), markov_retry_hard_limit)
     while attempt_count < limit:
         chain = markov_chain(data, start=prompt)
-        if chain.strip() != prompt.strip():
+        if strip_punctuation(chain) != strip_punctuation(prompt):
             return chain
         attempt_count += 1
         logger.info(f'Retry {str(attempt_count)} for prompt {prompt}')
     # retry without the phrase
     chain = markov_chain(data)
-    if chain.strip() == prompt.strip():
+    if strip_punctuation(chain) == strip_punctuation(prompt):
         return ''
     return f'{prompt} {chain}'
