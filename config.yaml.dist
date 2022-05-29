@@ -4,3 +4,20 @@ markov_model_dir: ~/cheems_markov_models
 
 training:
   message_limit: 100
+  servers:
+    My server name:
+      channels:
+        blocklist:
+          - bot_testing
+          - bot_testing2
+    My other server name:
+      channels:
+        allowlist:
+          - general
+      users:
+        blocklist:
+          - BadGuy
+    Banned server:
+      channels:
+        allowlist:
+          -

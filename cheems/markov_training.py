@@ -4,7 +4,7 @@ from datetime import datetime
 
 from discord import TextChannel
 
-from cheems.config import config
+from cheems.config import config, is_name_allowed
 from discord.ext import commands
 
 from cheems.discord_helper import map_channel, map_message, map_server
@@ -33,7 +33,7 @@ async def train():
                 ch_model = models_xml.get_or_create_model(map_channel(discord_channel))
                 # find the earliest time from which to update
                 from_time = min(server_model.to_time, ch_model.to_time)
-                asyncio.create_task(update_models_from_channel(discord_channel, from_time))
+                await asyncio.create_task(update_models_from_channel(discord_channel, from_time))
 
 
 async def update_models_from_channel(
@@ -44,24 +44,36 @@ async def update_models_from_channel(
     Fetches a batch of messages from the channel after the given time,
     and updates all models relevant to that server, channel, user etc.
     """
-    history = discord_channel.history(
-        limit=config['training']['message_limit'],
-        after=from_time,
-        oldest_first=True,
-    )
     ch = map_channel(discord_channel)
     ch_model = models_xml.get_or_create_model(ch)
     server_model = models_xml.get_or_create_model(ch.server)
+
+    # check blocklists and allowlists in config:
+    server_config = config.get('training', {}).get('servers', {}).get(ch.server.name, {})
+    channel_config = server_config.get('channels', {})
+    user_config = server_config.get('users', {})
+    if not is_name_allowed(channel_config, ch.name):
+        return
+
     count = 0
     try:
+        history = discord_channel.history(
+            limit=config['training']['message_limit'],
+            after=from_time,
+            oldest_first=True,
+        )
         async for discord_message in history:
             msg = map_message(discord_message)
             user_model = models_xml.get_or_create_model(msg.user)
-            train_and_save_models([ch_model, server_model, user_model], msg)
+            models = [ch_model, server_model]
+            if is_name_allowed(user_config, msg.user.name):
+                models.append(user_model)
+            train_and_save_models(models, msg)
             count += 1
     except Exception as e:
         logger.exception(f'Error parsing channel {ch}: {e}')
     logger.info(f'Fetched {count} messages from {ch}')
+
 
 
 def train_and_save_models(models: list[Model], msg: Message):
