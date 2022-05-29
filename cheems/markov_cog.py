@@ -5,11 +5,11 @@ from discord.ext import commands
 from discord.ext.commands import Bot, Context
 
 from cheems.config import config
-from cheems.discord_helper import extract_target, map_message, map_server
+from cheems.discord_helper import extract_target, map_message, map_server, format_mention
 from cheems.markov import models_xml
 from cheems.markov.markov import markov_chain, canonical_form, strip_punctuation
 from cheems.markov.model import ModelData
-from cheems.types import Server
+from cheems.types import Server, Target, User
 
 logger = logging.getLogger(__name__)
 markov_retry_hard_limit = 100
@@ -38,14 +38,37 @@ class MarkovCog(commands.Cog):
 
     @commands.command()
     async def cho(self, ctx: Context):
-        """`.cho prompt` generate markov chain from prompt"""
+        """
+        `.cho prompt` generate markov chain from prompt.
+        Uses server target.
+        """
         msg = map_message(ctx.message)
         prompt = msg.text.replace('.cho', '').strip()
         logger.info(f'{ctx.author.name} chomsed {prompt}')
 
-        server = map_server(ctx.guild)
-        response = _continue_prompt(server, prompt)
+        response = _continue_prompt(msg.server, prompt)
         if len(response) > 0:
+            await ctx.send(response)
+            await ctx.message.delete()
+
+    @commands.command()
+    async def cho_user(self, ctx: Context):
+        """
+        `.cho_user @mention prompt` generate markov chain from prompt.
+        Uses mentioned target.
+        """
+        msg = map_message(ctx.message)
+        target = extract_target(ctx)
+        mention = format_mention(target)
+        prompt = msg.text.replace('.cho_user', '').strip()
+        if len(mention) > 0:
+            prompt = prompt.replace(f'{mention}', '').strip()
+        logger.info(f'{ctx.author.name} chomsed {target}: {prompt}')
+
+        response = _continue_prompt(target, prompt)
+        if len(response) > 0:
+            if isinstance(target, User):
+                response = f'{target.name}: {response}'
             await ctx.send(response)
             await ctx.message.delete()
 
@@ -53,20 +76,24 @@ class MarkovCog(commands.Cog):
     async def ask(self, ctx: Context):
         """
         `.ask prompt` will try to reply to the prompt's last word.
-        Tries to use the mentioned target too.
+        Uses the server target.
+        """
+        msg = map_message(ctx.message)
+        prompt = msg.text.replace('.ask', '').strip()
+        logger.info(f'{ctx.author.name} asked: {prompt}')
+        await _ask(ctx, msg.server, prompt)
+
+    @commands.command()
+    async def ask_user(self, ctx: Context):
+        """
+        `.ask_user @mention prompt` will try to reply to the prompt's last word.
+        Use the mentioned target.
         """
         target = extract_target(ctx)
         msg = map_message(ctx.message)
-        prompt = msg.text.replace('.ask', '').strip()
+        prompt = msg.text.replace('.ask_user', '').strip()
         logger.info(f'{ctx.author.name} asked {target}: {prompt}')
-
-        last_word = canonical_form(prompt.split(' ')[-1])
-        model = models_xml.get_model(target)
-        if model is None:
-            return
-        response = _markov_chain_with_retry(model.data, last_word)
-        if len(response) > 0:
-            await ctx.message.reply(response)
+        await _ask(ctx, target, prompt)
 
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
@@ -90,9 +117,9 @@ class MarkovCog(commands.Cog):
                     await msg.delete()
 
 
-def _continue_prompt(server: Server, prompt: str) -> str:
+def _continue_prompt(target: Target, prompt: str) -> str:
     """Returns empty string if could not continue."""
-    model = models_xml.get_model(server)
+    model = models_xml.get_model(target)
     if model is None:
         return ''
     return _markov_chain_with_retry(model.data, prompt)
@@ -132,3 +159,15 @@ def _markov_chain_with_retry(data: ModelData, prompt: str) -> str:
     if strip_punctuation(chain) == strip_punctuation(prompt):
         return ''
     return f'{prompt} {chain}'
+
+
+async def _ask(ctx: Context, target: Target, prompt: str):
+    last_word = canonical_form(prompt.split(' ')[-1])
+    model = models_xml.get_model(target)
+    if model is None:
+        return
+    response = _markov_chain_with_retry(model.data, last_word)
+    if len(response) > 0:
+        if isinstance(target, User):
+            response = f'{target.name}: {response}'
+        await ctx.message.reply(response)
