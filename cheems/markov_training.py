@@ -18,10 +18,7 @@ models_xml.load_models()
 bot = commands.Bot(command_prefix='.')
 bot.remove_command('help')
 
-
-# todo: use mutex
-last_save_time: datetime = datetime.now()
-save_period = timedelta(minutes=5)
+save_period = timedelta(minutes=2)
 unsaved_models = set()
 
 
@@ -32,10 +29,11 @@ async def on_ready():
 
 
 async def train():
+    bot.loop.create_task(_save_models_periodic())
     for guild in bot.guilds:
         for discord_channel in guild.channels:
             if isinstance(discord_channel, TextChannel):
-                await asyncio.create_task(
+                bot.loop.create_task(
                     continuously_update_models_from_channel(discord_channel)
                 )
 
@@ -57,7 +55,6 @@ async def continuously_update_models_from_channel(discord_channel: TextChannel):
         await asyncio.create_task(
             continuously_update_models_from_channel(discord_channel)
         )
-    _save_unsaved_models()
 
 
 async def update_models_from_channel(
@@ -123,16 +120,21 @@ def train_models(models: list[Model], msg: Message):
         model.updated_time = datetime.now()
 
 
-def _save_unsaved_models():
-    """save all modified models periodically."""
-    global last_save_time
-    if datetime.now() > (last_save_time + save_period):
-        unsaved_count = len(unsaved_models)
-        while len(unsaved_models) > 0:
-            model = unsaved_models.pop()
-            models_xml.save_model(model)
-        last_save_time = datetime.now()
-        logger.info(f'Saved {unsaved_count} models')
+async def _save_models_periodic():
+    """save all unsaved models periodically."""
+    while True:
+        await asyncio.sleep(save_period.seconds)
+        logger.info('Saving all models...')
+        _save_models()
+
+
+def _save_models():
+    """save all unsaved models"""
+    unsaved_count = len(unsaved_models)
+    while len(unsaved_models) > 0:
+        model = unsaved_models.pop()
+        models_xml.save_model(model)
+    logger.info(f'Saved {unsaved_count} models')
 
 
 if __name__ == '__main__':
