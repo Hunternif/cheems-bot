@@ -100,10 +100,10 @@ second . 1
 
     def test_break_into_words(self):
         words = _break_into_words(
-            ' Hello, darkness   ,,\n my   old friend?! I... go \n home\n\n'
+            ' Hello, darkness   ,,\n\n my   old friend?! I... go \n home\n\n'
         )
         self.assertEqual([
-            'Hello', ',darkness', ',my', 'old', 'friend', '?', 'I', '.', 'go', '.', 'home'
+            'Hello', ',darkness', ',my', 'old', 'friend', '?', 'I', '.', 'go', 'home'
         ], words)
 
     def test_clean_punctuation(self):
@@ -114,12 +114,12 @@ second . 1
             '私は💩', '⚠', '<@123>', '<:hi>', '<#general>', 'пупа', 'фыв', '.'
         ], words)
 
-    def test_fix_broken_discord_mentions(self):
+    def test_keep_discord_mentions(self):
         words = _break_into_words(
-            '<\u200b@123> <: 456> <# general> <@ Hunternif#317>'
+            '<\u200b@123> <@!456> <#general> Hunternif#317 <@&role>, <:emoji:001>! <:a:animated:002>'
         )
         self.assertEqual([
-            '<@123>', '<:456>', '<#general>', '<@Hunternif#317>'
+            '<@123>', '<@!456>', '<#general>', 'Hunternif#317', '<@&role>', ',<:emoji:001>', '!', '<:a:animated:002>'
         ], words)
 
     def test_remove_urls(self):

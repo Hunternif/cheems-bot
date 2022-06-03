@@ -46,10 +46,8 @@ def _break_into_words(sentence: str) -> list[str]:
     sentence = sentence.strip()
     # Remove urls:
     sentence = url_pattern.sub('', sentence)
-    # Fix broken discord mentions:
-    sentence = re.sub(r'<([#:@])\s+([\d\w#]+)', lambda m: f'<{m.group(1)}{m.group(2)}', sentence)
-    # Line breaks are considered end characters:
-    sentence = sentence.replace('\n', ENDS[0])
+    # Line breaks are considered spaces:
+    sentence = sentence.replace('\n', ' ')
     # Clean whitespaces:
     sentence = re.sub(r'[ᅟ\s]+', ' ', sentence)
     # Remove bad punctuation:
@@ -58,10 +56,15 @@ def _break_into_words(sentence: str) -> list[str]:
     sentence = sentence.replace('\u200b', '')
     # Convert long strings of punctuation into a short one, e.g. ...->. ?!->?
     sentence = re.sub(rf'([{re_punctuation}]+)', lambda m: m.group(0)[0], sentence)
-    # Ensure every end character is a separate word:
+    # Ensure every end character is a separate word, except in discord mentions like <@!123>:
     sentence = re.sub(
-        rf'(\S?)([{re_ENDS}])(\S?)',
-        lambda m: f'{m.group(1)} {m.group(2)} {m.group(3)}',
+        rf'(\S)([{re_ENDS}]) ',
+        lambda m: f'{m.group(1)} {m.group(2)} ',
+        sentence
+    )
+    sentence = re.sub(
+        rf' ([{re_ENDS}])(\S)',
+        lambda m: f' {m.group(1)} {m.group(2)}',
         sentence
     )
     # Ensure punctuation sticks to the NEXT word, e.g. 'hello,'
