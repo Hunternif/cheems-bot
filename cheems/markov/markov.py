@@ -9,7 +9,7 @@ ENDS = '.?!'
 omitted_ends = '.'  # characters that are too boring and should be trimmed
 punctuation = '.,;:!?'
 punctuation_except_ENDS = ',;:'
-bad_punctuation = '`~^&*(){}[]-=+•“”"\'…—'  # keeping $/ for discord commands
+bad_punctuation = '`~^*(){}[]-=+•“”"\'…—«»'  # keeping $/ for discord commands and <@#&> for mentions.
 re_ENDS = re.escape(ENDS)
 re_punctuation = re.escape(punctuation)
 re_punctuation_except_END = re.escape(punctuation_except_ENDS)
