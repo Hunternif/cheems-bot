@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
+from cheems.pictures import Picture
+
 
 # Domain classes for modelling Discord interactions
 
@@ -68,3 +70,4 @@ class Message:
     channel: Channel
     text: str
     created_at: datetime
+    pictures: list[Picture] = field(default_factory=list)

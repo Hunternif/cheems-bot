@@ -6,6 +6,7 @@ from discord.ext.commands.context import Context as DiscordContext
 from discord.user import BaseUser
 
 from cheems.markov import models_xml
+from cheems.pictures import Picture
 from cheems.targets import Server, Target, User, Channel, Message
 
 
@@ -74,7 +75,19 @@ def map_message(msg: DiscordMessage) -> Message:
     channel = map_channel(msg.channel)
     text = msg.system_content or ''  # use raw content to include mentions
     created_at = msg.created_at
-    return Message(server, user, channel, text, created_at)
+    pics = []
+    for att in msg.attachments:
+        if (att.width or 0) > 0:
+            pics.append(Picture(
+                att.id,
+                att.url,
+                msg.clean_content,
+                created_at,
+                user.id,
+                channel.id,
+                server.id
+            ))
+    return Message(server, user, channel, text, created_at, pictures=pics)
 
 
 def format_mention(target: Target) -> str:
