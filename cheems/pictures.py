@@ -6,6 +6,8 @@ from datetime import datetime
 from sqlite3 import Connection
 from typing import Optional
 
+from cheems.config import config
+
 
 @dataclass(frozen=True)
 class Picture:
@@ -34,7 +36,8 @@ def _sanitize_str_for_db(s: str) -> str:
     return re.sub(r'[^\w\s/:.]', '', s)
 
 
-_filename = 'pics.db'
+_db_dir = config['db_dir']
+_filename = _db_dir + '/pics.db'
 
 _create_tables = '''
 CREATE TABLE IF NOT EXISTS pics (
@@ -51,6 +54,8 @@ CREATE TABLE IF NOT EXISTS pics (
 
 def _get_db_connection() -> Connection:
     """Don't forget to close this connection after use."""
+    if not os.path.exists(_db_dir):
+        os.makedirs(_db_dir)
     if not os.path.exists(_filename):
         open(_filename, 'a').close()
     con = sqlite3.connect(f'file:{_filename}?mode=rw', uri=True)
@@ -62,6 +67,7 @@ def _get_db_connection() -> Connection:
 
 
 def save_pic(pic: Picture):
+    """Doesn't commit the transaction, call `save_all()`"""
     cur = _con.cursor()
     msg = _sanitize_str_for_db(pic.msg)
     url = _sanitize_str_for_db(pic.url)
@@ -69,7 +75,6 @@ def save_pic(pic: Picture):
         'INSERT OR IGNORE INTO pics values (?, ?, ?, ?, ?, ?, ?)',
         (pic.id, url, msg, pic.time, pic.uploader_id, pic.channel_id, pic.server_id)
     )
-    _con.commit()
 
 
 def get_pic_by_id(pic_id: int) -> Optional[Picture]:
