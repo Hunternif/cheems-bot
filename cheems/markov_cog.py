@@ -34,7 +34,7 @@ class MarkovCog(commands.Cog):
             else:
                 text = chain
             await ctx.send(text)
-            await ctx.message.delete()
+            # await ctx.message.delete()
 
     @commands.command()
     async def cho(self, ctx: Context):
@@ -49,7 +49,7 @@ class MarkovCog(commands.Cog):
         response = _continue_prompt(msg.server, prompt)
         if len(response) > 0:
             await ctx.send(response)
-            await ctx.message.delete()
+            # await ctx.message.delete()
 
     @commands.command()
     async def cho_user(self, ctx: Context):
@@ -67,7 +67,7 @@ class MarkovCog(commands.Cog):
             if isinstance(target, User):
                 response = f'{target.name}: {response}'
             await ctx.send(response)
-            await ctx.message.delete()
+            # await ctx.message.delete()
 
     @commands.command()
     async def ask(self, ctx: Context):
@@ -113,7 +113,7 @@ class MarkovCog(commands.Cog):
                 response = _continue_prompt(m.server, prompt)
                 if len(response) > 0:
                     await msg.channel.send(response)
-                    await msg.delete()
+                    # await msg.delete()
 
     def _message_contains_command(self, msg: Message) -> bool:
         text: str = msg.system_content or ''
