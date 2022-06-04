@@ -31,6 +31,15 @@ def is_name_allowed(config: dict, name: str) -> bool:
     return True
 
 
+def is_channel_sfw(server_name: str, channel_name: str) -> bool:
+    server_config = config.get('training', {}).get('servers', {}).get(server_name, {})
+    channel_config = server_config.get('channels', {})
+    nsfw = channel_config.get('nsfw', [])
+    if isinstance(nsfw, list) and channel_name in nsfw:
+        return False
+    return True
+
+
 config = {}
 
 try:

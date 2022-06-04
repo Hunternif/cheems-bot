@@ -13,6 +13,8 @@ training:
         blocklist:
           - bot_testing
           - bot_testing2
+        nsfw:
+          - nsfw_channel
     My other server name:
       channels:
         allowlist:

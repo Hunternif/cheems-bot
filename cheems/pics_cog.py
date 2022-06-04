@@ -17,33 +17,50 @@ class PicsCog(commands.Cog):
     @commands.command()
     async def pic(self, ctx: Context):
         """`.pic @user/#channel` post a random picture from the given target."""
-        target = extract_target(ctx)
-        prompt = get_command_argument(ctx)
-        logger.info(f'{ctx.author.name} requested pic from {target}: {prompt}')
-        prompt = remove_mention(prompt, target)
-        pics = []
-        if isinstance(target, User):
-            pics = pictures.get_pics_where(
-                server_id=target.server_id,
-                uploader_id=target.id,
-                word=prompt,
-                random=True,
-                limit=1
-            )
-        elif isinstance(target, Channel):
-            pics = pictures.get_pics_where(
-                server_id=target.server_id,
-                channel_id=target.id,
-                word=prompt,
-                random=True,
-                limit=1
-            )
-        elif isinstance(target, Server):
-            pics = pictures.get_pics_where(
-                server_id=target.id,
-                word=prompt,
-                random=True,
-                limit=1
-            )
-        if len(pics) > 0:
-            await ctx.send(pics[0].url)
+        await _pic(ctx, sfw=True)
+
+    @commands.command()
+    async def pic_nsfw(self, ctx: Context):
+        """Post a random nsfw picture. Uses target"""
+        await _pic(ctx, sfw=False)
+
+    @commands.command()
+    async def pic_any(self, ctx: Context):
+        """Post a random picture, either SFW or NSFW. Uses target"""
+        await _pic(ctx)
+
+
+async def _pic(ctx: Context, sfw: bool = None):
+    target = extract_target(ctx)
+    prompt = get_command_argument(ctx)
+    logger.info(f'{ctx.author.name} requested pic from {target}: {prompt}')
+    prompt = remove_mention(prompt, target)
+    pics = []
+    if isinstance(target, User):
+        pics = pictures.get_pics_where(
+            server_id=target.server_id,
+            uploader_id=target.id,
+            word=prompt,
+            sfw=sfw,
+            random=True,
+            limit=1
+        )
+    elif isinstance(target, Channel):
+        pics = pictures.get_pics_where(
+            server_id=target.server_id,
+            channel_id=target.id,
+            word=prompt,
+            sfw=sfw,
+            random=True,
+            limit=1
+        )
+    elif isinstance(target, Server):
+        pics = pictures.get_pics_where(
+            server_id=target.id,
+            word=prompt,
+            sfw=sfw,
+            random=True,
+            limit=1
+        )
+    if len(pics) > 0:
+        await ctx.send(pics[0].url)

@@ -5,6 +5,7 @@ from discord import Message as DiscordMessage, Guild
 from discord.ext.commands.context import Context as DiscordContext, Context
 from discord.user import BaseUser
 
+from cheems.config import is_channel_sfw
 from cheems.markov import models_xml
 from cheems.pictures import Picture
 from cheems.targets import Server, Target, User, Channel, Message
@@ -73,6 +74,10 @@ def map_message(msg: DiscordMessage) -> Message:
     server = map_server(msg.guild) if hasattr(msg, 'guild') else None
     user = map_user(msg.author, server)
     channel = map_channel(msg.channel)
+    if server is None:
+        sfw = True
+    else:
+        sfw = is_channel_sfw(server.name, channel.name)
     text = msg.system_content or ''  # use raw content to include mentions
     created_at = msg.created_at
     pics = []
@@ -85,7 +90,8 @@ def map_message(msg: DiscordMessage) -> Message:
                 created_at,
                 user.id,
                 channel.id,
-                server.id
+                server.id,
+                sfw
             ))
     return Message(server, user, channel, text, created_at, pictures=pics)
 

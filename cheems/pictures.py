@@ -22,6 +22,7 @@ class Picture:
     uploader_id: int
     channel_id: int
     server_id: int
+    sfw: bool
 
     # no idea why this is not working by default
     def __eq__(self, other):
@@ -29,7 +30,8 @@ class Picture:
             return False
         return self.id == other.id and self.url == other.url and self.msg == other.msg and \
                self.time == other.time and self.uploader_id == other.uploader_id and \
-               self.channel_id == other.channel_id and self.server_id == other.server_id
+               self.channel_id == other.channel_id and self.server_id == other.server_id and \
+               self.sfw == other.sfw
 
 
 def _sanitize_str_for_db(s: str) -> str:
@@ -47,7 +49,8 @@ CREATE TABLE IF NOT EXISTS pics (
     time DATETIME,
     uploader_id INT,
     channel_id INT,
-    server_id INT
+    server_id INT,
+    sfw BOOLEAN
 );
 '''
 
@@ -72,8 +75,8 @@ def save_pic(pic: Picture):
     msg = _sanitize_str_for_db(pic.msg)
     url = _sanitize_str_for_db(pic.url)
     cur.execute(
-        'INSERT OR IGNORE INTO pics values (?, ?, ?, ?, ?, ?, ?)',
-        (pic.id, url, msg, pic.time, pic.uploader_id, pic.channel_id, pic.server_id)
+        'INSERT OR IGNORE INTO pics values (?, ?, ?, ?, ?, ?, ?, ?)',
+        (pic.id, url, msg, pic.time, pic.uploader_id, pic.channel_id, pic.server_id, pic.sfw)
     )
 
 
@@ -91,6 +94,7 @@ def get_pics_where(
         channel_id: int = None,
         server_id: int = None,
         word: str = None,
+        sfw: bool = None,
         random: bool = False,
         limit: int = None,
 ) -> list[Picture]:
@@ -110,6 +114,8 @@ def get_pics_where(
     if word is not None:
         sanitized_word = _sanitize_str_for_db(word).lower()
         conditions.append(f'lower(msg) like "%{sanitized_word}%"')
+    if sfw is not None:
+        conditions.append(f'sfw = {sfw}')
     if len(conditions) > 0:
         script += ' WHERE ' + ' AND '.join(conditions)
     if random:
@@ -125,10 +131,10 @@ def get_pics_where(
 
 
 def _pic_from_db_result(result: any) -> Picture:
-    (_id, url, msg, time, uploader_id, channel_id, server_id) = result
+    (_id, url, msg, time, uploader_id, channel_id, server_id, sfw) = result
     return Picture(
         int(_id), str(url), str(msg), datetime.fromisoformat(time),
-        int(uploader_id), int(channel_id), int(server_id)
+        int(uploader_id), int(channel_id), int(server_id), bool(sfw)
     )
 
 

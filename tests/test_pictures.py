@@ -15,7 +15,8 @@ pic1 = Picture(
     time=datetime.now(),
     uploader_id=97748578113425407,
     channel_id=975045729766764578,
-    server_id=975045729766764573
+    server_id=975045729766764573,
+    sfw=True
 )
 
 
@@ -53,14 +54,18 @@ class TestPicsDb(TestCase):
     def test_query_pics(self):
         time2 = pic1.time + timedelta(days=1)
         pic2 = dataclasses.replace(pic1, id=123, uploader_id=456, msg='Hey ya', time=time2)
+        pic3 = dataclasses.replace(pic2, id=222, sfw=False)
         pictures.save_pic(pic1)
         pictures.save_pic(pic2)
-        self.assertEqual([pic1, pic2], pictures.get_pics_where())
+        pictures.save_pic(pic3)
+        self.assertEqual([pic1, pic2, pic3], pictures.get_pics_where())
         self.assertEqual([pic1], pictures.get_pics_where(limit=1))
-        self.assertEqual([pic1, pic2], pictures.get_pics_where(server_id=pic1.server_id))
-        self.assertEqual([pic1, pic2], pictures.get_pics_where(channel_id=pic1.channel_id))
+        self.assertEqual([pic1, pic2, pic3], pictures.get_pics_where(server_id=pic1.server_id))
+        self.assertEqual([pic1, pic2, pic3], pictures.get_pics_where(channel_id=pic1.channel_id))
         self.assertEqual([pic1], pictures.get_pics_where(uploader_id=pic1.uploader_id))
-        self.assertEqual([pic2], pictures.get_pics_where(uploader_id=456))
+        self.assertEqual([pic2, pic3], pictures.get_pics_where(uploader_id=456))
         self.assertEqual([], pictures.get_pics_where(uploader_id=0))
-        self.assertEqual([pic2], pictures.get_pics_where(word='hey'))
+        self.assertEqual([pic2, pic3], pictures.get_pics_where(word='hey'))
         self.assertEqual([pic1], pictures.get_pics_where(word='THIS'))
+        self.assertEqual([pic1, pic2], pictures.get_pics_where(sfw=True))
+        self.assertEqual([pic3], pictures.get_pics_where(sfw=False))
