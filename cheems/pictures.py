@@ -119,4 +119,9 @@ def _pic_from_db_result(result: any) -> Picture:
     )
 
 
+def save_all():
+    """Commit DB operations"""
+    _con.commit()
+
+
 _con = _get_db_connection()

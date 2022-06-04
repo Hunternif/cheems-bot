@@ -3,11 +3,11 @@ import logging
 from datetime import datetime, timedelta
 
 from discord import TextChannel
-
-from cheems.config import config, is_name_allowed
 from discord.ext import commands
 
-from cheems.discord_helper import map_channel, map_message, map_server
+from cheems import pictures
+from cheems.config import config, is_name_allowed
+from cheems.discord_helper import map_channel, map_message
 from cheems.markov import models_xml
 from cheems.markov.markov import train_models_on_sentence
 from cheems.markov.model import Model
@@ -117,6 +117,10 @@ def train_models(models: list[Model], msg: Message):
         if model.to_time < msg.created_at:
             model.to_time = msg.created_at
         model.updated_time = datetime.now()
+    # also save images
+    # todo: use a separate date count for pictures?
+    for p in msg.pictures:
+        pictures.save_pic(p)
 
 
 async def _save_models_periodic():
@@ -133,6 +137,7 @@ def _save_models():
     while len(unsaved_models) > 0:
         model = unsaved_models.pop()
         models_xml.save_model(model)
+    pictures.save_all()
     logger.info(f'Saved {unsaved_count} models')
 
 
