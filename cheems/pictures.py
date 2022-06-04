@@ -86,9 +86,12 @@ def get_pics_where(
         channel_id: int = None,
         server_id: int = None,
         word: str = None,
+        random: bool = False,
+        limit: int = None,
 ) -> list[Picture]:
     """
-    Fetch pics with optional conditions, ordered by time
+    Fetch pics with optional conditions, ordered by time.
+    :param random: use random order instead.
     """
     cur = _con.cursor()
     script = 'SELECT * FROM pics'
@@ -104,7 +107,12 @@ def get_pics_where(
         conditions.append(f'lower(msg) like "%{sanitized_word}%"')
     if len(conditions) > 0:
         script += ' WHERE ' + ' AND '.join(conditions)
-    script += ' ORDER BY time'
+    if random:
+        script += ' ORDER BY RANDOM()'
+    else:
+        script += ' ORDER BY time'
+    if limit is not None:
+        script += f' LIMIT {limit}'
     cur.execute(script)
     results = cur.fetchall()
     pics = [_pic_from_db_result(r) for r in results]

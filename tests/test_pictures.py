@@ -56,6 +56,7 @@ class TestPicsDb(TestCase):
         pictures.save_pic(pic1)
         pictures.save_pic(pic2)
         self.assertEqual([pic1, pic2], pictures.get_pics_where())
+        self.assertEqual([pic1], pictures.get_pics_where(limit=1))
         self.assertEqual([pic1, pic2], pictures.get_pics_where(server_id=pic1.server_id))
         self.assertEqual([pic1, pic2], pictures.get_pics_where(channel_id=pic1.channel_id))
         self.assertEqual([pic1], pictures.get_pics_where(uploader_id=pic1.uploader_id))

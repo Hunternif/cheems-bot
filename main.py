@@ -2,6 +2,7 @@ import logging
 
 from discord.ext.commands import Context
 
+from cheems.pics_cog import PicsCog
 from cheems.config import config
 from discord.ext import commands
 
@@ -15,6 +16,7 @@ bot = commands.Bot(command_prefix='.')
 bot.remove_command('help')
 bot.add_cog(MarkovCog(bot))
 bot.add_cog(HelpCog(bot))
+bot.add_cog(PicsCog(bot))
 
 
 # Runs when Bot Successfully Connects

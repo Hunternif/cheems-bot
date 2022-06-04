@@ -2,7 +2,7 @@ import re
 from typing import Optional
 
 from discord import Message as DiscordMessage, Guild
-from discord.ext.commands.context import Context as DiscordContext
+from discord.ext.commands.context import Context as DiscordContext, Context
 from discord.user import BaseUser
 
 from cheems.markov import models_xml
@@ -98,3 +98,23 @@ def format_mention(target: Target) -> str:
         return f'<#{target.id}>'
     else:
         return ''
+
+
+def get_command_argument(ctx: Context) -> str:
+    """Strip the command name from message text."""
+    text: str = ctx.message.system_content or ''
+    if ctx.command is not None:
+        text = text.replace(f'{ctx.prefix}{ctx.command.name}', '', 1).strip()
+    return text
+
+
+def remove_mention(text: str, target: Target) -> str:
+    """Removes both ids <@123> and name of the target"""
+    mention = format_mention(target)
+    if len(mention) > 0:
+        text = text.replace(f'{mention}', '').strip()
+    if hasattr(target, 'name'):
+        target_name = target.name.lower()
+        if text.lower().startswith(target_name):
+            text = text[len(target_name):].strip()
+    return text

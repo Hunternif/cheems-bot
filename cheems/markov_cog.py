@@ -5,7 +5,7 @@ from discord.ext import commands
 from discord.ext.commands import Bot, Context
 
 from cheems.config import config
-from cheems.discord_helper import extract_target, map_message, format_mention
+from cheems.discord_helper import extract_target, map_message, format_mention, get_command_argument, remove_mention
 from cheems.markov import models_xml
 from cheems.markov.markov import markov_chain, canonical_form, strip_punctuation
 from cheems.markov.model import ModelData
@@ -177,22 +177,3 @@ async def _ask(ctx: Context, target: Target, prompt: str):
         if isinstance(target, User):
             response = f'{target.name}: {response}'
         await ctx.message.reply(response)
-
-
-def get_command_argument(ctx: Context) -> str:
-    text: str = ctx.message.system_content or ''
-    if ctx.command is not None:
-        text = text.replace(f'{ctx.prefix}{ctx.command.name}', '', 1).strip()
-    return text
-
-
-def remove_mention(text: str, target: Target) -> str:
-    """Removes both ids <@123> and name of the target"""
-    mention = format_mention(target)
-    if len(mention) > 0:
-        text = text.replace(f'{mention}', '').strip()
-    if hasattr(target, 'name'):
-        target_name = target.name.lower()
-        if text.lower().startswith(target_name):
-            text = text[len(target_name):].strip()
-    return text
