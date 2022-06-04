@@ -83,6 +83,8 @@ def map_message(msg: DiscordMessage) -> Message:
     pics = []
     for att in msg.attachments:
         if (att.width or 0) > 0:
+            if (att.filename or '').startswith('SPOILER'):
+                sfw = False
             pics.append(Picture(
                 att.id,
                 att.url,
