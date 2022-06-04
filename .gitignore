@@ -1,6 +1,7 @@
 # Local settings
 config.yaml
 markov_models/
+pics.db
 
 # IDEA
 .idea/*
