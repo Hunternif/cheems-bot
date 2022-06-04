@@ -42,13 +42,14 @@ class MarkovCog(commands.Cog):
         `.cho prompt` generate markov chain from prompt.
         Uses server target.
         """
-        msg = map_message(ctx.message)
-        prompt = get_command_argument(ctx)
-        logger.info(f'{ctx.author.name} chomsed {prompt}')
-
-        response = _continue_prompt(msg.server, prompt)
-        if len(response) > 0:
-            await ctx.send(response)
+        await self.cho_user(ctx)
+        # msg = map_message(ctx.message)
+        # prompt = get_command_argument(ctx)
+        # logger.info(f'{ctx.author.name} chomsed {prompt}')
+        #
+        # response = _continue_prompt(msg.server, prompt)
+        # if len(response) > 0:
+        #     await ctx.send(response)
             # await ctx.message.delete()
 
     @commands.command()
@@ -75,10 +76,11 @@ class MarkovCog(commands.Cog):
         `.ask prompt` will try to reply to the prompt's last word.
         Uses the server target.
         """
-        msg = map_message(ctx.message)
-        prompt = get_command_argument(ctx)
-        logger.info(f'{ctx.author.name} asked: {prompt}')
-        await _ask(ctx, msg.server, prompt)
+        await self.ask_user(ctx)
+        # msg = map_message(ctx.message)
+        # prompt = get_command_argument(ctx)
+        # logger.info(f'{ctx.author.name} asked: {prompt}')
+        # await _ask(ctx, msg.server, prompt)
 
     @commands.command()
     async def ask_user(self, ctx: Context):
