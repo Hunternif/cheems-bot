@@ -66,7 +66,7 @@ def save_pic(pic: Picture):
     msg = _sanitize_str_for_db(pic.msg)
     url = _sanitize_str_for_db(pic.url)
     cur.execute(
-        'INSERT INTO pics values (?, ?, ?, ?, ?, ?, ?)',
+        'INSERT OR IGNORE INTO pics values (?, ?, ?, ?, ?, ?, ?)',
         (pic.id, url, msg, pic.time, pic.uploader_id, pic.channel_id, pic.server_id)
     )
     _con.commit()
