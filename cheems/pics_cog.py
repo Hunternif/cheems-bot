@@ -63,4 +63,7 @@ async def _pic(ctx: Context, sfw: bool = None):
             limit=1
         )
     if len(pics) > 0:
-        await ctx.send(pics[0].url)
+        url = pics[0].url
+        if not pics[0].sfw:
+            url = f'|| {url} ||'
+        await ctx.send(url)
