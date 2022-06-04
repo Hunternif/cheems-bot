@@ -20,6 +20,7 @@ bot.remove_command('help')
 
 save_period = timedelta(minutes=2)
 unsaved_models = set()
+unsaved_picture_count = 0
 
 
 @bot.event
@@ -109,6 +110,7 @@ def train_models(models: list[Model], msg: Message):
     """
     Update content and time of models based on the message.
     """
+    global unsaved_picture_count
     models_data = [m.data for m in models]
     train_models_on_sentence(models_data, msg.text)
     for model in models:
@@ -121,6 +123,7 @@ def train_models(models: list[Model], msg: Message):
     # todo: use a separate date count for pictures?
     for p in msg.pictures:
         pictures.save_pic(p)
+        unsaved_picture_count += 1
 
 
 async def _save_models_periodic():
@@ -133,12 +136,15 @@ async def _save_models_periodic():
 
 def _save_models():
     """save all unsaved models"""
+    global unsaved_picture_count
     unsaved_count = len(unsaved_models)
     while len(unsaved_models) > 0:
         model = unsaved_models.pop()
         models_xml.save_model(model)
-    pictures.save_all()
     logger.info(f'Saved {unsaved_count} models')
+    pictures.save_all()
+    logger.info(f'Saved {unsaved_picture_count} pictures')
+    unsaved_picture_count = 0
 
 
 if __name__ == '__main__':
