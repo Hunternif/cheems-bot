@@ -21,7 +21,7 @@ class PicsCog(commands.Cog):
 
     @commands.command()
     async def pic_nsfw(self, ctx: Context):
-        """Post a random nsfw picture. Uses target"""
+        """Post a random NSFW picture. Uses target"""
         await _pic(ctx, sfw=False)
 
     @commands.command()
@@ -33,7 +33,13 @@ class PicsCog(commands.Cog):
 async def _pic(ctx: Context, sfw: bool = None):
     target = extract_target(ctx)
     prompt = get_command_argument(ctx)
-    logger.info(f'{ctx.author.name} requested pic from {target}: {prompt}')
+    if sfw is None:
+        sfw_str = ''
+    elif sfw:
+        sfw_str = 'SFW '
+    else:
+        sfw_str = 'NSFW '
+    logger.info(f'{ctx.author.name} requested {sfw_str}pic from {target}: {prompt}')
     prompt = remove_mention(prompt, target)
     pics = []
     if isinstance(target, User):
