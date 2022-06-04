@@ -1,10 +1,12 @@
 import logging
+from typing import Optional
 
 from discord.ext import commands
 from discord.ext.commands import Bot, Context
 
 from cheems import pictures
 from cheems.discord_helper import extract_target, get_command_argument, remove_mention
+from cheems.pictures import Picture
 from cheems.targets import User, Channel, Server
 
 logger = logging.getLogger(__name__)
@@ -41,35 +43,65 @@ async def _pic(ctx: Context, sfw: bool = None):
         sfw_str = 'NSFW '
     logger.info(f'{ctx.author.name} requested {sfw_str}pic from {target}: {prompt}')
     prompt = remove_mention(prompt, target)
-    pics = []
     if isinstance(target, User):
-        pics = pictures.get_pics_where(
+        pic = _get_random_pic(
             server_id=target.server_id,
             uploader_id=target.id,
             word=prompt,
             sfw=sfw,
-            random=True,
-            limit=1
         )
     elif isinstance(target, Channel):
-        pics = pictures.get_pics_where(
+        pic = _get_random_pic(
             server_id=target.server_id,
             channel_id=target.id,
             word=prompt,
             sfw=sfw,
-            random=True,
-            limit=1
         )
     elif isinstance(target, Server):
-        pics = pictures.get_pics_where(
+        pic = _get_random_pic(
             server_id=target.id,
             word=prompt,
+            sfw=sfw,
+        )
+    else:
+        pic = None
+    if pic is not None:
+        url = pic.url
+        if not pic.sfw:
+            url = f'|| {url} ||'
+        await ctx.send(url)
+
+
+def _get_random_pic(
+        uploader_id: int = None,
+        channel_id: int = None,
+        server_id: int = None,
+        word: str = None,
+        sfw: bool = None,
+) -> Optional[Picture]:
+    """
+    Returns 1 random pic for the given criteria.
+    If it fails to find with a prompt, drops the prompt.
+    """
+    pics = pictures.get_pics_where(
+        uploader_id=uploader_id,
+        channel_id=channel_id,
+        server_id=server_id,
+        word=word,
+        sfw=sfw,
+        random=True,
+        limit=1
+    )
+    if len(pics) <= 0:
+        pics = pictures.get_pics_where(
+            uploader_id=uploader_id,
+            channel_id=channel_id,
+            server_id=server_id,
+            word=None,
             sfw=sfw,
             random=True,
             limit=1
         )
     if len(pics) > 0:
-        url = pics[0].url
-        if not pics[0].sfw:
-            url = f'|| {url} ||'
-        await ctx.send(url)
+        return pics[0]
+    return None
