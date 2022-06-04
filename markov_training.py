@@ -85,14 +85,13 @@ async def update_models_from_channel(
             oldest_first=True,
         )
         async for discord_message in history:
-            models = [ch_model, server_model]
             msg = map_message(discord_message)
-            user_model = models_xml.get_or_create_model(msg.user)
-            if is_name_allowed(user_config, msg.user.name):
-                models.append(user_model)
-            train_models(models, msg)
-            for model in models:
-                unsaved_models.add(model)
+            if msg.user.id != bot.user.id and is_name_allowed(user_config, msg.user.name):
+                user_model = models_xml.get_or_create_model(msg.user)
+                models = [ch_model, server_model, user_model]
+                train_models(models, msg)
+                for model in models:
+                    unsaved_models.add(model)
             count += 1
     except Exception as e:
         logger.exception(f'Error parsing channel {ch}: {e}')
