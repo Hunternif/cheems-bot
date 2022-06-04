@@ -122,6 +122,14 @@ second . 1
             '<@123>', '<@!456>', '<#general>', 'Hunternif#317', '<@&role>', ',<:emoji:001>', '!', '<:a:animated:002>'
         ], words)
 
+    def test_compound_words(self):
+        words = _break_into_words(
+            'кто-то - это кто-нибудь'
+        )
+        self.assertEqual([
+            'кто-то', '-', 'это', 'кто-нибудь'
+        ], words)
+
     def test_remove_urls(self):
         words = _break_into_words(
             'Check out https://google.com/trends, my dude'
