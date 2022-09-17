@@ -110,9 +110,11 @@ class MarkovCog(commands.Cog):
         m = map_message(msg)
         for mention in msg.mentions:
             if mention.id == self.bot.user.id:
+                # if mentioned the bot, do 'ask': continue from the last word
                 prompt = m.text.replace(f'<@{self.bot.user.id}>', '').strip()
-                logger.info(f'{msg.author.name} chomsed {prompt}')
-                response = _continue_prompt(m.server, prompt)
+                last_word = canonical_form(prompt.split(' ')[-1])
+                logger.info(f'{msg.author.name} asked the bot: {prompt}')
+                response = _continue_prompt(m.server, last_word)
                 if len(response) > 0:
                     await msg.channel.send(response)
                     # await msg.delete()
