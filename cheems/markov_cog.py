@@ -140,10 +140,7 @@ async def _reply_back(msg: Message):
         return  # can't reply outside of server
     logger.info(f'{msg.author.name} replied {m.text}')
     last_word = canonical_form(m.text.split(' ')[-1])
-    model = models_xml.get_model(m.server)
-    if model is None:
-        return
-    response = _markov_chain_with_retry(model.data, last_word)
+    response = _continue_prompt(m.server, last_word)
     if len(response) > 0:
         await msg.reply(response)
 
