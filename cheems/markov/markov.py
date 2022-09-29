@@ -17,7 +17,7 @@ re_punctuation = re.escape(punctuation)
 re_punctuation_except_END = re.escape(punctuation_except_ENDS)
 re_punctuation_except_commands = re.escape(punctuation_except_commands)
 re_bad_punctuation = re.escape(bad_punctuation)
-url_pattern = re.compile(r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])')
+url_pattern = re.compile(r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#\-()!]*[\w@?^=%&/~+#-])')
 
 
 def strip_punctuation(text: str) -> str:
