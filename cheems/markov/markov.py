@@ -11,7 +11,7 @@ command_chars = '.!/'  # characters often used at the start of a word for a comm
 punctuation = '.,;:!?'
 punctuation_except_ENDS = ',;:'
 punctuation_except_commands = ',;:?'
-bad_punctuation = '`~^*(){}[]=+•“”"\'…—«»'  # keeping $/ for discord commands and <@#&> for mentions.
+bad_punctuation = '`~^*(){}[]=+•“”"…—«»'  # keeping $/ for discord commands and <@#&> for mentions.
 re_ENDS = re.escape(ENDS)
 re_punctuation = re.escape(punctuation)
 re_punctuation_except_END = re.escape(punctuation_except_ENDS)

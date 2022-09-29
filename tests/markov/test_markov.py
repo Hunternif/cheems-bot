@@ -148,6 +148,10 @@ second . 1
         words = _break_into_words('```from re import *\n def main()``` это питон')
         self.assertEqual(['это', 'питон'], words)
 
+    def test_apostrophe(self):
+        words = _break_into_words("I'm lovin' mike's stuff")
+        self.assertEqual(["I'm", "lovin'", "mike's", "stuff"], words)
+
     def test_keep_command_at_start(self):
         words = _break_into_words('.roll d20')
         self.assertEqual(['.roll', 'd20'], words)
