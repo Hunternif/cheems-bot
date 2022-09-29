@@ -135,6 +135,8 @@ def train_models(models: list[Model], msg: Message):
     for model in models:
         if model.from_time == models_xml.EPOCH:
             model.from_time = msg.created_at
+        if model.from_time > msg.created_at:
+            model.from_time = msg.created_at
         if model.to_time < msg.created_at:
             model.to_time = msg.created_at
         model.updated_time = datetime.now()
