@@ -97,7 +97,7 @@ async def update_models_from_channel(
                     and is_message_id_allowed(server_config, discord_message.id):
                 user_model = models_xml.get_or_create_model(msg.user)
 
-                if is_name_special(user_config, msg.user.name):
+                if msg.user.bot or is_name_special(user_config, msg.user.name):
                     models = [user_model]
                 else:
                     models.append(user_model)

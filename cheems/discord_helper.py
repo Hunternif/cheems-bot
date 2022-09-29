@@ -18,7 +18,13 @@ def map_server(guild: Optional[Guild]) -> Optional[Server]:
 
 
 def map_user(m: BaseUser, server: Optional[Server]) -> User:
-    return User(id=int(m.id), name=str(m.name), discriminator=int(m.discriminator), server=server)
+    return User(
+        id=int(m.id),
+        name=str(m.name),
+        discriminator=int(m.discriminator),
+        server=server,
+        bot=m.bot,
+    )
 
 
 def map_channel(ch) -> Channel:

@@ -28,9 +28,9 @@ user2 = User(456, 'Tsukasa', 2222, server)
 class TestDiscordHelper(TestCase):
     @classmethod
     def setUpClass(cls):
-        d_user1.configure_mock(id=123, name='Kagamin', discriminator=1111)
-        d_user2.configure_mock(id=456, name='Tsukasa', discriminator=2222)
-        d_bot.configure_mock(id=100)
+        d_user1.configure_mock(id=123, name='Kagamin', discriminator=1111, bot=False)
+        d_user2.configure_mock(id=456, name='Tsukasa', discriminator=2222, bot=False)
+        d_bot.configure_mock(id=100, bot=True)
         d_channel.configure_mock(id=200, name='Lucky channel', guild=d_server)
         d_dm_channel.configure_mock(id=201)
         del d_dm_channel.guild
