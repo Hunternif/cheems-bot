@@ -6,7 +6,8 @@ from discord import TextChannel
 from discord.ext import commands
 
 from cheems import pictures
-from cheems.config import config, is_name_allowed, is_message_id_allowed
+from cheems.config import config, is_name_allowed, is_message_id_allowed, \
+    is_name_special
 from cheems.discord_helper import map_channel, map_message
 from cheems.markov import models_xml
 from cheems.markov.markov import train_models_on_sentence
@@ -86,12 +87,21 @@ async def update_models_from_channel(
             oldest_first=True,
         )
         async for discord_message in history:
-            models = [ch_model, server_model]
+            if is_name_special(channel_config, ch.name):
+                models = [ch_model]
+            else:
+                models = [ch_model, server_model]
+
             msg = map_message(discord_message)
-            if msg.user.id != bot.user.id and is_name_allowed(user_config, msg.user.name)\
+            if msg.user.id != bot.user.id and is_name_allowed(user_config, msg.user.name) \
                     and is_message_id_allowed(server_config, discord_message.id):
                 user_model = models_xml.get_or_create_model(msg.user)
-                models.append(user_model)
+
+                if is_name_special(user_config, msg.user.name):
+                    models = [user_model]
+                else:
+                    models.append(user_model)
+
                 train_models(models, msg)
                 for model in models:
                     unsaved_models.add(model)

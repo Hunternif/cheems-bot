@@ -15,6 +15,11 @@ training:
           - bot_testing2
         nsfw:
           - nsfw_channel
+        special:
+          - deer-gacha
+      users:
+        special:
+          - my_bot
       bad_msg:
         - 1024851143001641020
     My other server name:

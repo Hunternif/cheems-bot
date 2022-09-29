@@ -31,6 +31,18 @@ def is_name_allowed(config: dict, name: str) -> bool:
     return True
 
 
+def is_name_special(config: dict, name: str) -> bool:
+    """
+    Certain channels or users can be considered too spammy to contibute
+    to the main dataset, but they may be interesting on their own.
+    Messages from these channels will only update their own config.
+    """
+    special_list = config.get('special', [])
+    if name in special_list:
+        return True
+    return False
+
+
 def is_message_id_allowed(config: dict, id: int) -> bool:
     """
     Certain specific messages can be blocked per server config.
