@@ -31,6 +31,16 @@ def is_name_allowed(config: dict, name: str) -> bool:
     return True
 
 
+def is_message_id_allowed(config: dict, id: int) -> bool:
+    """
+    Certain specific messages can be blocked per server config.
+    """
+    bad_msg = config.get('bad_msg', [])
+    if id in bad_msg:
+        return False
+    return True
+
+
 def is_channel_sfw(server_name: str, channel_name: str) -> bool:
     server_config = config.get('training', {}).get('servers', {}).get(server_name, {})
     channel_config = server_config.get('channels', {})

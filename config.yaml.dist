@@ -15,6 +15,8 @@ training:
           - bot_testing2
         nsfw:
           - nsfw_channel
+      bad_msg:
+        - 1024851143001641020
     My other server name:
       channels:
         allowlist:
