@@ -7,19 +7,22 @@ from cheems.util import pairwise
 # these characters indicate end of a sentence
 ENDS = '.?!'
 omitted_ends = '.'  # characters that are too boring and should be trimmed
+command_chars = '.!/'  # characters often used at the start of a word for a command, e.g. '.roll'
 punctuation = '.,;:!?'
 punctuation_except_ENDS = ',;:'
+punctuation_except_commands = ',;:?'
 bad_punctuation = '`~^*(){}[]=+•“”"\'…—«»'  # keeping $/ for discord commands and <@#&> for mentions.
 re_ENDS = re.escape(ENDS)
 re_punctuation = re.escape(punctuation)
 re_punctuation_except_END = re.escape(punctuation_except_ENDS)
+re_punctuation_except_commands = re.escape(punctuation_except_commands)
 re_bad_punctuation = re.escape(bad_punctuation)
 url_pattern = re.compile(r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])')
 
 
 def strip_punctuation(text: str) -> str:
-    """Strips punctuation from both ends."""
-    text = re.sub(rf'^[{re_punctuation}]+', '', text).strip()
+    """Strips punctuation from both ends, except command characters at the start."""
+    text = re.sub(rf'^[{re_punctuation_except_commands}]+', '', text).strip()
     text = re.sub(rf'[{re_punctuation}]+$', '', text).strip()
     return text
 

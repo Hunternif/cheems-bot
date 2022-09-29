@@ -153,8 +153,16 @@ second . 1
         self.assertEqual(['.roll', 'd20'], words)
 
     def test_keep_command_in_middle(self):
-        words = _break_into_words('хочу .roll d20')
-        self.assertEqual(['хочу', '.roll', 'd20'], words)
+        words = _break_into_words('хочу .roll d20 $feed !rtv')
+        self.assertEqual(['хочу', '.roll', 'd20', '$feed', '!rtv'], words)
+
+    def test_train_model_with_command_at_start(self):
+        data = Model.parse_data('')
+        train_model_on_sentence(data, '.roll d20')
+        self.assertEqual('''
+.roll d20 1
+d20 . 1
+'''.strip(), Model._serialize_data(data))
 
     def test_train_model(self):
         data = Model.parse_data('''
