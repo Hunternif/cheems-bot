@@ -122,6 +122,12 @@ second . 1
             '<@123>', '<@!456>', '<#general>', 'Hunternif#317', '<@&role>', ',<:emoji:001>', '!', '<:a:animated:002>'
         ], words)
 
+    def test_multiple_mentions(self):
+        words = _break_into_words('<@190829031984332800> <@97748578113425408> <@668516559563653145>')
+        self.assertEqual([
+            '<@190829031984332800>', '<@97748578113425408>', '<@668516559563653145>'
+        ], words)
+
     def test_compound_words(self):
         words = _break_into_words(
             'кто-то - это кто-нибудь'
