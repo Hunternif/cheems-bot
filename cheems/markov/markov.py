@@ -43,6 +43,8 @@ def _break_into_words(sentence: str) -> list[str]:
     Extracts a sequence of words from the sentence.
     Punctuation is stripped or formatted for the model.
     """
+    # Remove code:
+    sentence = re.sub(r'```.*```', '', sentence, flags=re.DOTALL)
     sentence = sentence.strip()
     # Remove urls:
     sentence = url_pattern.sub('', sentence)

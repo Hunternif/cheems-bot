@@ -144,6 +144,10 @@ second . 1
             'Check', 'out', ',my', 'dude'
         ], words)
 
+    def test_remove_code(self):
+        words = _break_into_words('```from re import *\n def main()``` это питон')
+        self.assertEqual(['это', 'питон'], words)
+
     def test_train_model(self):
         data = Model.parse_data('''
 hello ,my 1
