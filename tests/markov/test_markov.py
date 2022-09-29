@@ -148,6 +148,14 @@ second . 1
         words = _break_into_words('```from re import *\n def main()``` это питон')
         self.assertEqual(['это', 'питон'], words)
 
+    def test_keep_command_at_start(self):
+        words = _break_into_words('.roll d20')
+        self.assertEqual(['.roll', 'd20'], words)
+
+    def test_keep_command_in_middle(self):
+        words = _break_into_words('хочу .roll d20')
+        self.assertEqual(['хочу', '.roll', 'd20'], words)
+
     def test_train_model(self):
         data = Model.parse_data('''
 hello ,my 1

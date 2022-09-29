@@ -64,12 +64,14 @@ def _break_into_words(sentence: str) -> list[str]:
         lambda m: f'{m.group(1)} {m.group(2)} ',
         sentence
     )
-    sentence = re.sub(
-        rf' ([{re_ENDS}])(\S)',
-        lambda m: f' {m.group(1)} {m.group(2)}',
-        sentence
-    )
-    # Ensure punctuation sticks to the NEXT word, e.g. 'hello,'
+    # Allow using commands as words, e.g. '.roll'
+    # sentence = re.sub(
+    #     rf' ([{re_ENDS}])(\S)',
+    #     lambda m: f' {m.group(1)} {m.group(2)}',
+    #     sentence
+    # )
+
+    # Ensure punctuation sticks to the NEXT word, e.g. 'hello ,world'
     sentence = re.sub(
         rf'\s?([{re_punctuation_except_END}]+)\s',
         lambda m: f' {m.group(1)}',
