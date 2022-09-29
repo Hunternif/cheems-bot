@@ -78,6 +78,7 @@ async def update_models_from_channel(
     user_config = server_config.get('users', {})
     if not is_name_allowed(channel_config, ch.name):
         return 0
+    channel_is_special = is_name_special(channel_config, ch.name)
 
     count = 0
     try:
@@ -87,7 +88,7 @@ async def update_models_from_channel(
             oldest_first=True,
         )
         async for discord_message in history:
-            if is_name_special(channel_config, ch.name):
+            if channel_is_special:
                 models = [ch_model]
             else:
                 models = [ch_model, server_model]
@@ -99,7 +100,7 @@ async def update_models_from_channel(
 
                 if msg.user.bot or is_name_special(user_config, msg.user.name):
                     models = [user_model]
-                else:
+                elif not channel_is_special:
                     models.append(user_model)
 
                 train_models(models, msg)
