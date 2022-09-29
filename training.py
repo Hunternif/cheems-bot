@@ -48,6 +48,7 @@ async def continuously_update_models_from_channel(discord_channel: TextChannel):
     ch_model = models_xml.get_or_create_model(ch)
     server_model = models_xml.get_or_create_model(ch.server)
     # find the earliest time from which to update
+    # TODO: is this time calculation correct, e.g. if I'm training deer-gacha separately?
     from_time = min(server_model.to_time, ch_model.to_time)
     num_fetched = await asyncio.create_task(
         update_models_from_channel(discord_channel, from_time)
@@ -96,9 +97,11 @@ async def update_models_from_channel(
             msg = map_message(discord_message)
             if msg.user.id != bot.user.id and is_name_allowed(user_config, msg.user.name) \
                     and is_message_id_allowed(server_config, discord_message.id):
+                # TODO: continuing user's model from last iteration doesn't work: the model is overwritten!
                 user_model = models_xml.get_or_create_model(msg.user)
 
-                if msg.user.bot or is_name_special(user_config, msg.user.name):
+                if is_name_special(user_config, msg.user.name):
+                    #  TODO: update channel 'to_time' anyway!
                     models = [user_model]
                 elif not channel_is_special:
                     models.append(user_model)

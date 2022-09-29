@@ -23,7 +23,6 @@ def map_user(m: BaseUser, server: Optional[Server]) -> User:
         name=str(m.name),
         discriminator=int(m.discriminator),
         server=server,
-        bot=m.bot,
     )
 
 

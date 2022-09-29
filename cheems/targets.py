@@ -35,7 +35,6 @@ class User(Target):
     name: str
     discriminator: int
     server: Optional[Server]
-    bot: bool = False
 
     def __str__(self):
         server_part = '' if self.server is None else f' on {self.server.name}'
