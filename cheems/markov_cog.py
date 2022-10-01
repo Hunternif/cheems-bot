@@ -106,7 +106,7 @@ class MarkovCog(commands.Cog):
         # check if it's a reply to this bot
         if msg.reference is not None and \
                 msg.reference.resolved.author.id == self.bot.user.id:
-            await _reply_back(msg)
+            await reply_back(msg)
             return
         # check if it's a mention of this bot. It acts like `cho`.
         m = map_message(msg)
@@ -137,7 +137,7 @@ def _continue_prompt(target: Target, prompt: str) -> str:
     return _markov_chain_with_retry(model.data, prompt)
 
 
-async def _reply_back(msg: Message):
+async def reply_back(msg: Message):
     """Reply to the message by continuing the Markov chain from the last word."""
     m = map_message(msg)
     if m.server is None:

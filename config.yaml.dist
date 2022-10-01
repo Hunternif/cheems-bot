@@ -4,6 +4,16 @@ markov_model_dir: ~/cheems_markov_models
 db_dir: ./cheems_markov_models
 markov_retry_limit: 5
 
+proactive_reply:
+  # Number of messages until the next proactive reply:
+  period_msgs: 2
+  servers:
+    My server name:
+      channels:
+        allowlist:
+          - bot_testing
+
+
 training:
   message_limit: 100
   wait_sec: 1
