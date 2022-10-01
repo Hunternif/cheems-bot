@@ -5,9 +5,11 @@ from discord.ext import commands
 from discord.ext.commands import Bot, Context
 
 from cheems.config import config
-from cheems.discord_helper import extract_target, map_message, format_mention, get_command_argument, remove_mention
+from cheems.discord_helper import extract_target, map_message, format_mention,\
+    get_command_argument, remove_mention
 from cheems.markov import models_xml
-from cheems.markov.markov import markov_chain, canonical_form, strip_punctuation
+from cheems.markov.markov import markov_chain, canonical_form, strip_punctuation,\
+    get_last_word
 from cheems.markov.model import ModelData
 from cheems.targets import Server, Target, User
 
@@ -112,7 +114,7 @@ class MarkovCog(commands.Cog):
             if mention.id == self.bot.user.id:
                 # if mentioned the bot, do 'ask': continue from the last word
                 prompt = m.text.replace(f'<@{self.bot.user.id}>', '').strip()
-                last_word = canonical_form(prompt.split(' ')[-1])
+                last_word = get_last_word(prompt)
                 logger.info(f'{msg.author.name} asked the bot: {prompt}')
                 response = _continue_prompt(m.server, last_word)
                 if len(response) > 0:
@@ -141,7 +143,7 @@ async def _reply_back(msg: Message):
     if m.server is None:
         return  # can't reply outside of server
     logger.info(f'{msg.author.name} replied {m.text}')
-    last_word = canonical_form(m.text.split(' ')[-1])
+    last_word = get_last_word(m.text)
     response = _continue_prompt(m.server, last_word)
     if len(response) > 0:
         await msg.reply(response)
@@ -169,7 +171,7 @@ def _markov_chain_with_retry(data: ModelData, prompt: str) -> str:
 
 
 async def _ask(ctx: Context, target: Target, prompt: str):
-    last_word = canonical_form(prompt.split(' ')[-1])
+    last_word = get_last_word(prompt)
     model = models_xml.get_model(target)
     if model is None:
         return

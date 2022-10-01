@@ -2,7 +2,8 @@ import random
 from unittest import TestCase
 
 # noinspection PyProtectedMember
-from cheems.markov.markov import markov_chain, _pick_first_word, _break_into_words, train_model_on_sentence
+from cheems.markov.markov import markov_chain, _pick_first_word,\
+    _break_into_words, train_model_on_sentence, get_last_word
 from cheems.markov.model import Model
 
 
@@ -175,6 +176,10 @@ second . 1
         words = _break_into_words('хочу .roll d20 $feed !rtv')
         self.assertEqual(['хочу', '.roll', 'd20', '$feed', '!rtv'], words)
 
+    def test_strip_separate_punctuation(self):
+        words = _break_into_words('wow ! hello , world ?')
+        self.assertEqual(['wow', '!', 'hello', ',world', '?'], words)
+
     def test_train_model_with_command_at_start(self):
         data = Model.parse_data('')
         train_model_on_sentence(data, '.roll d20')
@@ -234,3 +239,16 @@ my friends 1
 my world 3
 world . 2
 '''.strip(), Model._serialize_data(data))
+
+    def test_train_with_separate_punctuation(self):
+        data = Model.parse_data('')
+        train_model_on_sentence(data, 'wow ! hello , world ?')
+        self.assertEqual('''
+hello ,world 1
+world ? 1
+wow ! 1
+'''.strip(), Model._serialize_data(data))
+
+    def test_last_word(self):
+        self.assertEqual('wow', get_last_word('wow! ?'))
+
