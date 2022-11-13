@@ -1,5 +1,7 @@
+import asyncio
 import logging
 
+from discord import Intents
 from discord.ext.commands import Context
 
 from cheems.pics_cog import PicsCog
@@ -13,12 +15,11 @@ from cheems.proactive_markov_cog import ProactiveMarkovCog
 
 logger = logging.getLogger('cheems')
 models_xml.load_models()
-bot = commands.Bot(command_prefix='.')
-bot.remove_command('help')
-bot.add_cog(MarkovCog(bot))
-bot.add_cog(ProactiveMarkovCog(bot))
-bot.add_cog(HelpCog(bot))
-bot.add_cog(PicsCog(bot))
+
+intents = Intents.default()
+intents.messages = True
+intents.message_content = True
+bot = commands.Bot(command_prefix='.', intents=intents)
 
 
 # Runs when Bot Successfully Connects
@@ -34,7 +35,17 @@ async def on_command_error(ctx: Context, error):
         logger.error(f'{ctx.cog.qualified_name} error: {error}')
 
 
+async def main():
+    bot.remove_command('help')
+    async with bot:
+        await bot.add_cog(MarkovCog(bot))
+        await bot.add_cog(ProactiveMarkovCog(bot))
+        await bot.add_cog(HelpCog(bot))
+        await bot.add_cog(PicsCog(bot))
+        await bot.start(config['discord_token'])
+
+
 try:
-    bot.run(config['discord_token'])
+    asyncio.run(main())
 except Exception:
     logger.exception("Couldn't run bot")

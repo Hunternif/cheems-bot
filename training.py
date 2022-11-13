@@ -2,7 +2,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 
-from discord import TextChannel
+from discord import Intents, TextChannel
 from discord.ext import commands
 
 from cheems import pictures
@@ -16,8 +16,11 @@ from cheems.targets import Message
 
 logger = logging.getLogger('training')
 models_xml.load_models()
-bot = commands.Bot(command_prefix='.')
-bot.remove_command('help')
+
+intents = Intents.default()
+intents.messages = True
+intents.message_content = True
+bot = commands.Bot(command_prefix='.', intents=intents)
 
 save_period = timedelta(minutes=2)
 unsaved_models = set()
@@ -172,5 +175,11 @@ def _save_models():
     unsaved_picture_count = 0
 
 
+async def main():
+    bot.remove_command('help')
+    async with bot:
+        await bot.start(config['discord_token'])
+
+
 if __name__ == '__main__':
-    bot.run(config['discord_token'])
+    asyncio.run(main())
