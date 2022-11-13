@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from importlib import reload
 from unittest import TestCase
 from unittest.mock import Mock, MagicMock
@@ -16,7 +16,7 @@ d_bot = Mock()
 d_channel = Mock()
 d_dm_channel = MagicMock()
 d_server = Mock()
-time = datetime.now()
+time = datetime.now(tz=timezone.utc)
 
 # test data: my domain objects
 server = Server(789, 'My server')

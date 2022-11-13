@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Optional
 
 from cheems.config import config
@@ -20,7 +20,7 @@ models_by_server_id: ModelsByServer = {}
 models: list[XmlModel] = []
 
 # Discord epoch time
-EPOCH = datetime(year=2015, month=1, day=1)
+EPOCH = datetime(year=2015, month=1, day=1, tzinfo=timezone.utc)
 
 
 def _register_model(m: XmlModel):
@@ -74,7 +74,7 @@ def create_model(target: Target) -> XmlModel:
     xml_model = XmlModel(
         from_time=EPOCH,
         to_time=EPOCH,
-        updated_time=datetime.now(),
+        updated_time=datetime.now(tz=timezone.utc),
         target=target,
         description=str(target)
     )

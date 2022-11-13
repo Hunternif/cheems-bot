@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from discord import TextChannel
 from discord.ext import commands
@@ -114,7 +114,7 @@ async def update_models_from_channel(
                 for model in models:
                     if model.to_time < msg.created_at:
                         model.to_time = msg.created_at
-                        model.updated_time = datetime.now()
+                        model.updated_time = datetime.now(tz=timezone.utc)
                         unsaved_models.add(model)
             count += 1
     except Exception as e:
@@ -143,7 +143,7 @@ def train_models(models: list[Model], msg: Message):
             model.from_time = msg.created_at
         if model.to_time < msg.created_at:
             model.to_time = msg.created_at
-        model.updated_time = datetime.now()
+        model.updated_time = datetime.now(tz=timezone.utc)
     # also save images
     # todo: use a separate date count for pictures?
     for p in msg.pictures:

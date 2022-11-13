@@ -1,15 +1,15 @@
 import dataclasses
 import unittest
-from datetime import datetime
+from datetime import datetime, timezone
 
 from cheems.markov.model_xml import XmlModel
 from cheems.targets import User, Server, Channel, Topic
 
 test_server = Server(12345, 'Test server')
 test_model = XmlModel(
-    from_time=datetime(2022, 4, 1),
-    to_time=datetime(2022, 5, 15),
-    updated_time=datetime(2022, 5, 15),
+    from_time=datetime(2022, 4, 1, tzinfo=timezone.utc),
+    to_time=datetime(2022, 5, 15, tzinfo=timezone.utc),
+    updated_time=datetime(2022, 5, 15, tzinfo=timezone.utc),
     target=User(9999, 'Hunternif', 8888, test_server),
     description="Hunternif's test data",
     data={

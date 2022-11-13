@@ -2,7 +2,7 @@ import logging
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from xml.sax.saxutils import unescape
 
@@ -40,9 +40,9 @@ class XmlModel(Model):
             xml = ET.fromstring(xml_str)
             format_version = int(xml.attrib['format_version'])
             if format_version >= 1:
-                from_time = datetime.fromisoformat(xml.attrib['from_time'])
-                to_time = datetime.fromisoformat(xml.attrib['to_time'])
-                updated_time = datetime.fromisoformat(xml.attrib['updated_time'])
+                from_time = datetime.fromisoformat(xml.attrib['from_time']).replace(tzinfo=timezone.utc)
+                to_time = datetime.fromisoformat(xml.attrib['to_time']).replace(tzinfo=timezone.utc)
+                updated_time = datetime.fromisoformat(xml.attrib['updated_time']).replace(tzinfo=timezone.utc)
                 description = xml.find('description').text
                 data = Model.parse_data(xml.find('data').text)
                 target = _target_from_xml(xml.find('target'))

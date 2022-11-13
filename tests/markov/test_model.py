@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest import TestCase
 
 from cheems.markov.model import Model
@@ -11,9 +11,9 @@ def create_test_model(
         description: str = 'Test model',
 ) -> Model:
     return Model(
-        from_time=datetime.now() - timedelta(days=1),
-        to_time=datetime.now(),
-        updated_time=datetime.now(),
+        from_time=datetime.now(tz=timezone.utc) - timedelta(days=1),
+        to_time=datetime.now(tz=timezone.utc),
+        updated_time=datetime.now(tz=timezone.utc),
         target=target,
         description=description,
         data=Model.parse_data(data_str)

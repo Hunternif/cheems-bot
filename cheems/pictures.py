@@ -2,7 +2,7 @@ import os
 import re
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlite3 import Connection
 from typing import Optional
 
@@ -133,7 +133,7 @@ def get_pics_where(
 def _pic_from_db_result(result: any) -> Picture:
     (_id, url, msg, time, uploader_id, channel_id, server_id, sfw) = result
     return Picture(
-        int(_id), str(url), str(msg), datetime.fromisoformat(time),
+        int(_id), str(url), str(msg), datetime.fromisoformat(time).replace(tzinfo=timezone.utc),
         int(uploader_id), int(channel_id), int(server_id), bool(sfw)
     )
 

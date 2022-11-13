@@ -1,6 +1,6 @@
 import dataclasses
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from importlib import reload
 from tempfile import TemporaryDirectory
 from unittest import TestCase
@@ -12,7 +12,7 @@ pic1 = Picture(
     id=982459577612238869,
     url='https://discord.com/channels/975045729766764573/975045729766764578/982459577612238869',
     msg='Check this out',
-    time=datetime.now(),
+    time=datetime.now(tz=timezone.utc),
     uploader_id=97748578113425407,
     channel_id=975045729766764578,
     server_id=975045729766764573,
