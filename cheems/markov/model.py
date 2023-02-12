@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from cheems.config import config
 from cheems.targets import Target
 
 logger = logging.getLogger(__name__)
@@ -31,12 +32,14 @@ class Model:
     @classmethod
     def parse_data(cls, text: str) -> ModelData:
         data: ModelData = {}
+        max_weight = config.get('markov_model_max_weight', 9999)
         for line in text.strip().splitlines():
             (first_word, next_word, count) = line.strip().split(' ')
+            weight = min(int(count), max_weight)  # limit word count
             data.setdefault(first_word, {})
             next_words = data[first_word]
             next_words.setdefault(next_word, 0)
-            next_words[next_word] += int(count)
+            next_words[next_word] += weight
         return data
 
     @classmethod

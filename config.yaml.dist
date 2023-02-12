@@ -4,6 +4,10 @@ markov_model_dir: ~/cheems_markov_models
 db_dir: ./cheems_markov_models
 markov_retry_limit: 5
 
+# maximum weight assigned to a word pair.
+# this trims outliers with huge weights, like bot messages.
+markov_model_max_weight: 50
+
 proactive_reply:
   # Number of messages until the next proactive reply:
   period_msgs: 2
