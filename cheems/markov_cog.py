@@ -137,14 +137,23 @@ def _continue_prompt(target: Target, prompt: str) -> str:
     return _markov_chain_with_retry(model.data, prompt)
 
 
-async def reply_back(msg: Message):
-    """Reply to the message by continuing the Markov chain from the last word."""
+async def reply_back(msg: Message, use_channel: bool = False):
+    """
+    Reply to the message by continuing the Markov chain from the last word.
+    If use_channel == True, will use the channel's model.
+    Otherwise, fall back to server model
+    """
     m = map_message(msg)
     if m.server is None:
         return  # can't reply outside of server
     logger.info(f'{msg.author.name} replied {m.text}')
     last_word = get_last_word(m.text)
-    response = _continue_prompt(m.server, last_word)
+    target = m.server
+    if use_channel:
+        channel_model = models_xml.get_model(m.channel)
+        if channel_model is not None:
+            target = m.channel
+    response = _continue_prompt(target, last_word)
     if len(response) > 0:
         await msg.reply(response)
 

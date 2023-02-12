@@ -30,7 +30,7 @@ class ProactiveMarkovCog(commands.Cog):
             self.messagesSinceBotByChannel[msg.channel.id] = count
             if count >= self.period_msgs:
                 self.messagesSinceBotByChannel[msg.channel.id] = 0
-                await reply_back(msg)
+                await reply_back(msg, use_channel=True)
 
     def _is_channel_allowed(self, msg: Message):
         m = map_message(msg)
