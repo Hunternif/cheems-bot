@@ -1,3 +1,5 @@
+import logging
+
 from discord import Message
 from discord.ext import commands
 from discord.ext.commands import Bot
@@ -5,6 +7,8 @@ from discord.ext.commands import Bot
 from cheems.config import config, is_name_allowed
 from cheems.discord_helper import map_message
 from cheems.markov_cog import reply_back
+
+logger = logging.getLogger(__name__)
 
 
 class ProactiveMarkovCog(commands.Cog):
@@ -30,6 +34,7 @@ class ProactiveMarkovCog(commands.Cog):
             self.messagesSinceBotByChannel[msg.channel.id] = count
             if count >= self.period_msgs:
                 self.messagesSinceBotByChannel[msg.channel.id] = 0
+                logger.info(f'Proactively replying to message: {msg.system_content}')
                 await reply_back(msg, use_channel=True)
 
     def _is_channel_allowed(self, msg: Message):

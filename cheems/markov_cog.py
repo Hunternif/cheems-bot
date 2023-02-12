@@ -10,7 +10,7 @@ from cheems.discord_helper import extract_target, map_message, format_mention,\
 from cheems.markov import models_xml
 from cheems.markov.markov import markov_chain, canonical_form, strip_punctuation,\
     get_last_word
-from cheems.markov.model import ModelData
+from cheems.markov.model import Model
 from cheems.targets import Server, Target, User
 
 logger = logging.getLogger(__name__)
@@ -25,10 +25,10 @@ class MarkovCog(commands.Cog):
     async def che(self, ctx: Context):
         """`.che @user/#channel` generate markov chain"""
         target = extract_target(ctx)
-        logger.info(f'{ctx.author.name} cheemsed {target}')
+        logger.info(f'{ctx.author.name} requested .che: target: {target}')
         model = models_xml.get_model(target)
         if model is not None:
-            chain = markov_chain(model.data)
+            chain = _markov_chain_with_retry(model)
             if isinstance(target, Server):
                 text = chain
             elif hasattr(target, 'name'):
@@ -41,28 +41,12 @@ class MarkovCog(commands.Cog):
     @commands.command()
     async def cho(self, ctx: Context):
         """
-        `.cho prompt` generate markov chain from prompt.
+        `.cho @mention prompt` generate markov chain from prompt.
         Uses server target.
-        """
-        await self.cho_user(ctx)
-        # msg = map_message(ctx.message)
-        # prompt = get_command_argument(ctx)
-        # logger.info(f'{ctx.author.name} chomsed {prompt}')
-        #
-        # response = _continue_prompt(msg.server, prompt)
-        # if len(response) > 0:
-        #     await ctx.send(response)
-            # await ctx.message.delete()
-
-    @commands.command()
-    async def cho_user(self, ctx: Context):
-        """
-        `.cho_user @mention prompt` generate markov chain from prompt.
-        Uses mentioned target.
         """
         target = extract_target(ctx)
         prompt = get_command_argument(ctx)
-        logger.info(f'{ctx.author.name} chomsed {target}: {prompt}')
+        logger.info(f'{ctx.author.name} requested .cho: target: {target}, prompt: {prompt}')
         prompt = remove_mention(prompt, target)
 
         response = _continue_prompt(target, prompt)
@@ -75,24 +59,12 @@ class MarkovCog(commands.Cog):
     @commands.command()
     async def ask(self, ctx: Context):
         """
-        `.ask prompt` will try to reply to the prompt's last word.
+        `.ask @mention prompt` will try to reply to the prompt's last word.
         Uses the server target.
-        """
-        await self.ask_user(ctx)
-        # msg = map_message(ctx.message)
-        # prompt = get_command_argument(ctx)
-        # logger.info(f'{ctx.author.name} asked: {prompt}')
-        # await _ask(ctx, msg.server, prompt)
-
-    @commands.command()
-    async def ask_user(self, ctx: Context):
-        """
-        `.ask_user @mention prompt` will try to reply to the prompt's last word.
-        Use the mentioned target.
         """
         target = extract_target(ctx)
         prompt = get_command_argument(ctx)
-        logger.info(f'{ctx.author.name} asked {target}: {prompt}')
+        logger.info(f'{ctx.author.name} requested .ask: target {target}, prompt: {prompt}')
         prompt = remove_mention(prompt, target)
         await _ask(ctx, target, prompt)
 
@@ -106,6 +78,7 @@ class MarkovCog(commands.Cog):
         # check if it's a reply to this bot
         if msg.reference is not None and \
                 msg.reference.resolved.author.id == self.bot.user.id:
+            logger.info(f'{msg.author.name} replied to bot: {msg.system_content}')
             await reply_back(msg)
             return
         # check if it's a mention of this bot. It acts like `cho`.
@@ -115,7 +88,7 @@ class MarkovCog(commands.Cog):
                 # if mentioned the bot, do 'ask': continue from the last word
                 prompt = m.text.replace(f'<@{self.bot.user.id}>', '').strip()
                 last_word = get_last_word(prompt)
-                logger.info(f'{msg.author.name} asked the bot: {prompt}')
+                logger.info(f'{msg.author.name} mentioned bot: {m.text}')
                 response = _continue_prompt(m.server, last_word)
                 if len(response) > 0:
                     await msg.channel.send(response)
@@ -133,8 +106,9 @@ def _continue_prompt(target: Target, prompt: str) -> str:
     """Returns empty string if could not continue."""
     model = models_xml.get_model(target)
     if model is None:
+        logger.info(f'No model for target {target}')
         return ''
-    return _markov_chain_with_retry(model.data, prompt)
+    return _markov_chain_with_retry(model, prompt)
 
 
 async def reply_back(msg: Message, use_channel: bool = False):
@@ -146,7 +120,6 @@ async def reply_back(msg: Message, use_channel: bool = False):
     m = map_message(msg)
     if m.server is None:
         return  # can't reply outside of server
-    logger.info(f'{msg.author.name} replied {m.text}')
     last_word = get_last_word(m.text)
     target = m.server
     if use_channel:
@@ -158,25 +131,41 @@ async def reply_back(msg: Message, use_channel: bool = False):
         await msg.reply(response)
 
 
-def _markov_chain_with_retry(data: ModelData, prompt: str) -> str:
+def _markov_chain_with_retry(model: Model, prompt: str = '') -> str:
     """
     Reruns markov chain multiple times if it fails to do attempts.
     Falls back to running without the prompt, and finally
     falls back to empty string.
     """
+    if len(prompt) > 0:
+        logger.info(f'Running model "{model.target}" for prompt "{prompt}"...')
+    else:
+        logger.info(f'Running model "{model.target}" without prompt...')
+
     attempt_count = 0
     limit = min(config.get('markov_retry_limit', markov_retry_hard_limit), markov_retry_hard_limit)
+
     while attempt_count < limit:
-        chain = markov_chain(data, start=prompt)
+        chain = markov_chain(model.data, start=prompt)
         if strip_punctuation(chain) != strip_punctuation(prompt):
+            logger.info(f'Result: {chain}')
             return chain
         attempt_count += 1
-        logger.info(f'Retry {str(attempt_count)} for prompt {prompt}')
-    # retry without the phrase
-    chain = markov_chain(data)
-    if strip_punctuation(chain) == strip_punctuation(prompt):
-        return ''
-    return f'{prompt} {chain}'
+        logger.info(f'Retry {str(attempt_count)}')
+
+    # failed with prompt!
+
+    if len(prompt) > 0:
+        # retry without prompt:
+        logger.info('Retry without prompt')
+        chain = markov_chain(model.data)
+        if len(strip_punctuation(chain)) > 0:
+            result = f'{prompt} {chain}'
+            logger.info(f'Result: {result}')
+            return result
+
+    logger.info('No result')
+    return ''
 
 
 async def _ask(ctx: Context, target: Target, prompt: str):
@@ -184,7 +173,7 @@ async def _ask(ctx: Context, target: Target, prompt: str):
     model = models_xml.get_model(target)
     if model is None:
         return
-    response = _markov_chain_with_retry(model.data, last_word)
+    response = _markov_chain_with_retry(model, last_word)
     if len(response) > 0:
         if isinstance(target, User):
             response = f'{target.name}: {response}'
