@@ -17,6 +17,15 @@ proactive_reply:
         allowlist:
           - bot_testing
 
+proactive_react:
+  # Number of messages until the next proactive reaction:
+  period_msgs: 2
+  servers:
+    My server name:
+      channels:
+        allowlist:
+          - bot_testing
+
 
 training:
   message_limit: 100
