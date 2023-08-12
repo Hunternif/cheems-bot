@@ -63,6 +63,10 @@ def is_channel_sfw(server_name: str, channel_name: str) -> bool:
 
 
 config = {}
+"""
+This config is imported in many modules, and is meant to be read-only.
+Might be an anti-pattern.
+"""
 
 try:
     with open('config.yaml', 'r', encoding='utf-8') as f:

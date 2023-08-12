@@ -16,7 +16,7 @@ class ProactiveMarkovCog(commands.Cog):
         self.bot = bot
         self.messagesSinceBotByChannel: dict[int, int] = {}
         self.config = config.get('proactive_reply', {})
-        self.period_msgs = self.config.get('period_msgs', 100)
+        self.period_msgs = int(self.config.get('period_msgs', 100))
 
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
