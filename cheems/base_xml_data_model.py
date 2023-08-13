@@ -26,7 +26,12 @@ class BaseXmlDataModel:
     updated_time: datetime
     target: Target
     description: str
-    raw_data: str
+    raw_data: str = ''
+    file_path: Optional[str] = None
+
+    @property
+    def server_id(self) -> int:
+        return self.target.server_id
 
     @classmethod
     def from_xml_file(cls, file_path: str) -> 'BaseXmlDataModel':

@@ -1,125 +1,96 @@
 import logging
-import os
-from datetime import datetime, timezone
 from typing import Dict, Optional
 
 from cheems.config import config
-from cheems.discord_helper import EPOCH
 from cheems.markov.model import Model
 from cheems.markov.model_xml import XmlModel
-from cheems.targets import Target, Server, Channel, User
-from cheems.util import sanitize_filename
+from cheems.targets import Target
+from cheems.xml_data_model_storage import XmlDataModelStorage
 
 logger = logging.getLogger(__name__)
-root_dir: str = config['markov_model_dir']
 
 ModelsByTarget = Dict[Target, XmlModel]
 ModelsByServer = Dict[int, ModelsByTarget]
 
-# models are mapped by server id and then by target id
-models_by_server_id: ModelsByServer = {}
-models: list[XmlModel] = []
+
+class MarkovStorage:
+    # Having duplicate raw strings inside XmlDataModelStorage and
+    # parsed XmlModel might be a waste of memory...
+    xml_storage: XmlDataModelStorage
+
+    # models are mapped by server id and then by target id
+    models_by_server_id: ModelsByServer
+    models: list[XmlModel]
+
+    def __init__(self):
+        self.xml_storage = XmlDataModelStorage(config['markov_model_dir'])
+        self.models_by_server_id = {}
+        self.models = []
+
+    def _register_model(self, m: XmlModel):
+        self.models.append(m)
+        self.models_by_server_id.setdefault(m.server_id, {})
+        models_by_target = self.models_by_server_id[m.server_id]
+        models_by_target[m.target] = m
+
+    def load_models(self):
+        self.xml_storage.load_models()
+        for xml_model in self.xml_storage.models:
+            model = XmlModel.from_base_model(xml_model)
+            self._register_model(model)
+
+    def save_model(self, model: Model):
+        xml_model = model if isinstance(model, XmlModel) else XmlModel.from_model(model)
+        self.xml_storage.save_model(xml_model.to_base_model())
+
+    def create_model(self, target: Target) -> XmlModel:
+        xml_model = self.xml_storage.create_model(target)
+        model = XmlModel.from_base_model(xml_model)
+        self._register_model(model)
+        return model
+
+    def get_or_create_model(self, target: Target) -> XmlModel:
+        """
+        Finds an existing Markov model for this target, or creates a new one.
+        """
+        model = self.get_model(target)
+        if model is None:
+            model = self.create_model(target)
+        return model
+
+    def get_model(self, target: Target) -> Optional[XmlModel]:
+        """
+        Finds an existing Markov model for this target, does not create new model.
+        """
+        if target.server_id not in self.models_by_server_id:
+            return None
+        models_by_target = self.models_by_server_id[target.server_id]
+        if target not in models_by_target:
+            return None
+        return models_by_target[target]
 
 
-def _register_model(m: XmlModel):
-    models.append(m)
-    models_by_server_id.setdefault(m.server_id, {})
-    models_by_target = models_by_server_id[m.server_id]
-    models_by_target[m.target] = m
+# global storage instance
+markov_storage = MarkovStorage()
 
+
+# methods that redirect to the global instance
 
 def load_models():
-    """
-    Loads all models from the configured directory
-    """
-    subdir: str
-    files: list[str]
-    for subdir, _, files in os.walk(root_dir):
-        for file in files:
-            full_path: str = os.path.join(subdir, file)
-            filename = os.fsdecode(file)
-            if filename.endswith('.xml'):
-                try:
-                    m = XmlModel.from_xml_file(full_path)
-                    _register_model(m)
-                except Exception:
-                    logger.exception(f'Failed to load model {filename}')
-    logger.info(f'Loaded {len(models)} Markov models')
+    markov_storage.load_models()
 
 
 def save_model(model: Model):
-    """
-    Saves model into the xml file, as written in attr 'file_path'
-    """
-    xml_model = model if isinstance(model, XmlModel) else XmlModel.from_model(model)
-    if xml_model.file_path is None:
-        # this shouldn't happen, so we'll save it in a special folder 'lost'
-        dir_name = f'{model.server_id}'
-        subdir = os.path.join(root_dir, 'lost', dir_name)
-        if not os.path.exists(subdir):
-            os.makedirs(subdir)
-        filename = f'{str(datetime.now())}.xml'
-        file_path = os.path.join(subdir, filename)
-        xml_model.file_path = file_path
-    with open(xml_model.file_path, 'w', encoding='utf-8') as f:
-        f.write(xml_model.to_xml())
+    markov_storage.save_model(model)
 
 
 def create_model(target: Target) -> XmlModel:
-    """
-    Creates model file and return the new model
-    """
-    xml_model = XmlModel(
-        from_time=EPOCH,
-        to_time=EPOCH,
-        updated_time=datetime.now(tz=timezone.utc),
-        target=target,
-        description=str(target)
-    )
-    if isinstance(target, Server):
-        server_dir = f'{target.id} {sanitize_filename(target.name)}'
-    elif hasattr(target, 'server'):
-        server: Server = target.server
-        server_dir = f'{server.id} {sanitize_filename(server.name)}'
-    else:
-        server_dir = f'{target.server_id}'
-    if isinstance(target, Channel):
-        target_dir = 'channels'
-    elif isinstance(target, User):
-        target_dir = 'users'
-    else:
-        target_dir = ''
-    subdir: str = os.path.join(root_dir, server_dir, target_dir)
-    if not os.path.exists(subdir):
-        os.makedirs(subdir)
-    filename = f'{target.id} {sanitize_filename(target.name)}.xml'
-    file_path: str = os.path.join(subdir, filename)
-    xml_model.file_path = file_path
-
-    _register_model(xml_model)
-    logger.info(f'Created model {file_path}')
-    return xml_model
+    return markov_storage.create_model(target)
 
 
 def get_or_create_model(target: Target) -> XmlModel:
-    """
-    Finds an existing Markov model for this target, or creates a new one.
-    """
-    if target.server_id not in models_by_server_id:
-        return create_model(target)
-    models_by_target = models_by_server_id[target.server_id]
-    if target not in models_by_target:
-        return create_model(target)
-    return models_by_target[target]
+    return markov_storage.get_or_create_model(target)
 
 
 def get_model(target: Target) -> Optional[XmlModel]:
-    """
-    Finds an existing Markov model for this target, does not create new model.
-    """
-    if target.server_id not in models_by_server_id:
-        return None
-    models_by_target = models_by_server_id[target.server_id]
-    if target not in models_by_target:
-        return None
-    return models_by_target[target]
+    return markov_storage.get_model(target)

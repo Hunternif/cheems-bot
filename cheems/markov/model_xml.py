@@ -23,6 +23,13 @@ class XmlModel(Model):
         return cls(**model.__dict__, file_path=file_path)
 
     @classmethod
+    def from_base_model(cls, xml_model: BaseXmlDataModel) -> 'XmlModel':
+        data = Model.parse_data(xml_model.raw_data)
+        fields = xml_model.__dict__.copy()
+        del fields['raw_data']
+        return cls(**fields, data=data)
+
+    @classmethod
     def from_xml_file(cls, file_path: str) -> 'XmlModel':
         with open(file_path, encoding='utf-8') as f:
             xml_str = f.read()
@@ -33,15 +40,13 @@ class XmlModel(Model):
     @classmethod
     def from_xml(cls, xml_str: str) -> 'XmlModel':
         xml_model = BaseXmlDataModel.from_xml(xml_str)
-        data = Model.parse_data(xml_model.raw_data)
-        fields = xml_model.__dict__.copy()
-        del fields['raw_data']
-        return XmlModel(**fields, data=data)
+        return XmlModel.from_base_model(xml_model)
 
-    def to_xml(self, pretty_print: bool = True) -> str:
+    def to_base_model(self) -> BaseXmlDataModel:
         raw_data = self.serialize_data()
         fields = self.__dict__.copy()
-        del fields['file_path']
         del fields['data']
-        xml_model = BaseXmlDataModel(**fields, raw_data=raw_data)
-        return xml_model.to_xml(pretty_print)
+        return BaseXmlDataModel(**fields, raw_data=raw_data)
+
+    def to_xml(self, pretty_print: bool = True) -> str:
+        return self.to_base_model().to_xml(pretty_print)
