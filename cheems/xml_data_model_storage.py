@@ -1,7 +1,7 @@
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Dict, Optional
+from typing import Dict, Optional, TypeVar, Generic
 
 from cheems.base_xml_data_model import BaseXmlDataModel
 from cheems.discord_helper import EPOCH
@@ -10,30 +10,35 @@ from cheems.util import sanitize_filename
 
 logger = logging.getLogger(__name__)
 
+T = TypeVar('T', bound=BaseXmlDataModel)
 
-class XmlDataModelStorage:
+
+class XmlDataModelStorage(Generic[T]):
     """
-    Loads and saves instances of BaseXmlDataModel classes in a directory.
+    Loads and saves instances of T in a directory.
     """
     root_dir: str
 
-    ModelsByTarget = Dict[Target, BaseXmlDataModel]
+    ModelsByTarget = Dict[Target, T]
     ModelsByServer = Dict[int, ModelsByTarget]
 
     # models are mapped by server id and then by target id
     models_by_server_id: ModelsByServer
-    models: list[BaseXmlDataModel]
+    models: list[T]
 
     def __init__(self, root_dir):
         self.root_dir = root_dir
         self.models_by_server_id = {}
         self.models = []
 
-    def _register_model(self, m: BaseXmlDataModel):
+    def _register_model(self, m: T):
         self.models.append(m)
         self.models_by_server_id.setdefault(m.server_id, {})
         models_by_target = self.models_by_server_id[m.server_id]
         models_by_target[m.target] = m
+
+    def ensure_type(self, base: BaseXmlDataModel) -> T:
+        return base
 
     def load_models(self):
         """
@@ -48,12 +53,13 @@ class XmlDataModelStorage:
                 if filename.endswith('.xml'):
                     try:
                         m = BaseXmlDataModel.from_xml_file(full_path)
-                        self._register_model(m)
+                        typed_m = self.ensure_type(m)
+                        self._register_model(typed_m)
                     except Exception:
                         logger.exception(f'Failed to load model {filename}')
         logger.info(f'Loaded {len(self.models)} XMl models')
 
-    def save_model(self, xml_model: BaseXmlDataModel):
+    def save_model(self, xml_model: T):
         """
         Saves model into the xml file, as written in attr 'file_path'
         """
@@ -69,7 +75,7 @@ class XmlDataModelStorage:
         with open(xml_model.file_path, 'w', encoding='utf-8') as f:
             f.write(xml_model.to_xml())
 
-    def create_model(self, target: Target) -> BaseXmlDataModel:
+    def create_model(self, target: Target) -> T:
         """
         Creates model file and return the new model
         """
@@ -101,11 +107,13 @@ class XmlDataModelStorage:
         file_path: str = os.path.join(subdir, filename)
         xml_model.file_path = file_path
 
-        self._register_model(xml_model)
-        logger.info(f'Created model {file_path}')
-        return xml_model
+        typed_model = self.ensure_type(xml_model)
 
-    def get_or_create_model(self, target: Target) -> BaseXmlDataModel:
+        self._register_model(typed_model)
+        logger.info(f'Created model {file_path}')
+        return typed_model
+
+    def get_or_create_model(self, target: Target) -> T:
         """
         Finds an existing model for this target, or creates a new one.
         """
@@ -114,7 +122,7 @@ class XmlDataModelStorage:
             model = self.create_model(target)
         return model
 
-    def get_model(self, target: Target) -> Optional[BaseXmlDataModel]:
+    def get_model(self, target: Target) -> Optional[T]:
         """
         Finds an existing model for this target, does not create new model.
         """
