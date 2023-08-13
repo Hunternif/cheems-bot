@@ -8,7 +8,7 @@ from discord.ext import commands
 from cheems import pictures
 from cheems.config import config, is_name_allowed, is_message_id_allowed, \
     is_name_special
-from cheems.discord_helper import map_channel, map_message
+from cheems.discord_helper import map_channel, map_message, EPOCH
 from cheems.markov import models_xml
 from cheems.markov.markov import train_models_on_sentence
 from cheems.markov.model import Model
@@ -140,7 +140,7 @@ def train_models(models: list[Model], msg: Message):
     models_data = [m.data for m in models]
     train_models_on_sentence(models_data, msg.text)
     for model in models:
-        if model.from_time == models_xml.EPOCH:
+        if model.from_time == EPOCH:
             model.from_time = msg.created_at
         if model.from_time > msg.created_at:
             model.from_time = msg.created_at

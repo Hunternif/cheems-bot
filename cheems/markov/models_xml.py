@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Dict, Optional
 
 from cheems.config import config
+from cheems.discord_helper import EPOCH
 from cheems.markov.model import Model
 from cheems.markov.model_xml import XmlModel
 from cheems.targets import Target, Server, Channel, User
@@ -18,9 +19,6 @@ ModelsByServer = Dict[int, ModelsByTarget]
 # models are mapped by server id and then by target id
 models_by_server_id: ModelsByServer = {}
 models: list[XmlModel] = []
-
-# Discord epoch time
-EPOCH = datetime(year=2015, month=1, day=1, tzinfo=timezone.utc)
 
 
 def _register_model(m: XmlModel):

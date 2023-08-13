@@ -1,4 +1,5 @@
 import re
+from datetime import datetime, timezone
 from typing import Optional
 
 from discord import Message as DiscordMessage, Guild
@@ -6,9 +7,11 @@ from discord.ext.commands.context import Context as DiscordContext, Context
 from discord.user import BaseUser
 
 from cheems.config import is_channel_sfw
-from cheems.markov import models_xml
 from cheems.pictures import Picture
 from cheems.targets import Server, Target, User, Channel, Message
+
+# Discord epoch time
+EPOCH = datetime(year=2015, month=1, day=1, tzinfo=timezone.utc)
 
 
 def map_server(guild: Optional[Guild]) -> Optional[Server]:
