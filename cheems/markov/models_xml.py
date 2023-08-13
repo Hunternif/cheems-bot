@@ -22,8 +22,12 @@ markov_storage = MarkovStorage(config['markov_model_dir'])
 
 # methods that redirect to the global instance
 
-def load_models():
-    markov_storage.load_models()
+def preload_models():
+    markov_storage.preload_models()
+
+
+def load_models(load_data: bool = True):
+    markov_storage.load_models(load_data)
 
 
 def save_model(model: Model):

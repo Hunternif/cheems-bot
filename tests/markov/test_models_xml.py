@@ -73,7 +73,7 @@ class TestMarkovModelsXml(TestCase):
         models_xml.load_models()
         for target, model in data:
             loaded_model = models_xml.get_model(target)
-            self.assertEquals(model, loaded_model)
+            self.assertEqual(model, loaded_model)
 
     def test_load_and_save_model(self):
         m = models_xml.create_model(user1)
@@ -88,3 +88,26 @@ class TestMarkovModelsXml(TestCase):
         models_xml.load_models()
         loaded_m = models_xml.get_model(user1)
         self.assertEqual({'hello': {'world': 1}}, loaded_m.data)
+
+    def test_preload_and_then_load(self):
+        m = models_xml.create_model(user1)
+        m.append_word_pair('hello', 'world')
+        models_xml.save_model(m)
+        self.assertEqual(True, m.is_data_loaded)
+
+        # clean old references
+        reload(models_xml)
+        self.assertEqual(0, len(models_xml.markov_storage.models))
+        self.assertIsNone(models_xml.get_model(user1))
+
+        models_xml.preload_models()
+        m2 = models_xml.markov_storage.models_by_server_id[server1.id][user1]
+        self.assertIsNotNone(m2)
+        self.assertEqual(False, m2.is_data_loaded)
+        self.assertEqual('', m2.raw_data)
+
+        # actually load data from file
+        m2 = models_xml.get_model(user1)
+        self.assertEqual('hello world 1', m2.raw_data)
+        self.assertEqual(True, m2.is_data_loaded)
+        self.assertEqual({'hello': {'world': 1}}, m2.data)

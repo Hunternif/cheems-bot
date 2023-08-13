@@ -40,9 +40,19 @@ class XmlDataModelStorage(Generic[T]):
     def ensure_type(self, base: BaseXmlDataModel) -> T:
         return base
 
-    def load_models(self):
+    def preload_models(self):
+        """
+        Checks what files exit, but doesn't store them in memory
+        """
+        self.load_models(load_data=False)
+
+    def load_models(self, load_data: bool = True):
         """
         Loads all models from the configured directory
+
+        :param load_data: if true, the data will be stored in RAM.
+            If false, the model will be "pre-loaded" without data, and data
+            needs to be loaded again from disk.
         """
         subdir: str
         files: list[str]
@@ -52,12 +62,15 @@ class XmlDataModelStorage(Generic[T]):
                 filename = os.fsdecode(file)
                 if filename.endswith('.xml'):
                     try:
-                        m = BaseXmlDataModel.from_xml_file(full_path)
+                        m = BaseXmlDataModel.from_xml_file(full_path, load_data)
                         typed_m = self.ensure_type(m)
                         self._register_model(typed_m)
                     except Exception:
                         logger.exception(f'Failed to load model {filename}')
-        logger.info(f'Loaded {len(self.models)} XMl models')
+        if load_data:
+            logger.info(f'Loaded {len(self.models)} XMl models')
+        else:
+            logger.info(f'Preloaded {len(self.models)} XMl models')
 
     def save_model(self, xml_model: T):
         """
@@ -85,7 +98,6 @@ class XmlDataModelStorage(Generic[T]):
             updated_time=datetime.now(tz=timezone.utc),
             target=target,
             description=str(target),
-            raw_data='',
         )
         if isinstance(target, Server):
             server_dir = f'{target.id} {sanitize_filename(target.name)}'
@@ -131,4 +143,7 @@ class XmlDataModelStorage(Generic[T]):
         models_by_target = self.models_by_server_id[target.server_id]
         if target not in models_by_target:
             return None
-        return models_by_target[target]
+        m = models_by_target[target]
+        if not m.is_data_loaded:
+            m.load_data()
+        return m

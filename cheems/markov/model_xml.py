@@ -30,16 +30,16 @@ class XmlModel(Model, BaseXmlDataModel):
         return cls(**fields, data=data)
 
     @classmethod
-    def from_xml_file(cls, file_path: str) -> 'XmlModel':
+    def from_xml_file(cls, file_path: str, load_data: bool = True) -> 'XmlModel':
         with open(file_path, encoding='utf-8') as f:
             xml_str = f.read()
-        m = cls.from_xml(xml_str)
+        m = cls.from_xml(xml_str, load_data)
         m.file_path = file_path
         return m
 
     @classmethod
-    def from_xml(cls, xml_str: str) -> 'XmlModel':
-        xml_model = BaseXmlDataModel.from_xml(xml_str)
+    def from_xml(cls, xml_str: str, load_data: bool = True) -> 'XmlModel':
+        xml_model = BaseXmlDataModel.from_xml(xml_str, load_data)
         return XmlModel.from_base_model(xml_model)
 
     def to_xml(self, pretty_print: bool = True) -> str:
@@ -47,3 +47,7 @@ class XmlModel(Model, BaseXmlDataModel):
         output = super().to_xml(pretty_print)
         self.raw_data = ''  # delete the raw string to save memory
         return output
+
+    def load_data(self):
+        super().load_data()
+        self.data = Model.parse_data(self.raw_data)

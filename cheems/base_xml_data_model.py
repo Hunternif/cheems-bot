@@ -29,23 +29,26 @@ class BaseXmlDataModel:
     raw_data: str = ''
     file_path: Optional[str] = None
 
+    is_data_loaded: bool = True
+    '''If False, data needs to be loaded from file'''
+
     @property
     def server_id(self) -> int:
         return self.target.server_id
 
     @classmethod
-    def from_xml_file(cls, file_path: str) -> 'BaseXmlDataModel':
+    def from_xml_file(cls, file_path: str, load_data: bool = True) -> 'BaseXmlDataModel':
         try:
             with open(file_path, encoding='utf-8') as f:
                 xml_str = f.read()
-            m = cls.from_xml(xml_str)
+            m = cls.from_xml(xml_str, load_data)
             m.file_path = file_path
             return m
         except Exception:
             logger.exception(f'parsing XML model: {file_path}')
 
     @classmethod
-    def from_xml(cls, xml_str: str) -> 'BaseXmlDataModel':
+    def from_xml(cls, xml_str: str, load_data: bool = True) -> 'BaseXmlDataModel':
         xml = ET.fromstring(xml_str)
         format_version = int(xml.attrib['format_version'])
         if format_version >= 1:
@@ -53,10 +56,17 @@ class BaseXmlDataModel:
             to_time = datetime.fromisoformat(xml.attrib['to_time']).replace(tzinfo=timezone.utc)
             updated_time = datetime.fromisoformat(xml.attrib['updated_time']).replace(tzinfo=timezone.utc)
             description = xml.find('description').text
-            raw_data = xml.find('data').text
+            if load_data:
+                raw_data = xml.find('data').text.strip()
+                is_data_loaded = True
+            else:
+                raw_data = ''
+                is_data_loaded = False
+
             target = _target_from_xml(xml.find('target'))
         # noinspection PyUnboundLocalVariable
-        return BaseXmlDataModel(from_time, to_time, updated_time, target, description, raw_data)
+        return BaseXmlDataModel(from_time, to_time, updated_time, target, description, raw_data,
+                                is_data_loaded=is_data_loaded)
 
     def to_xml(self, pretty_print: bool = True) -> str:
         root = ET.Element('model', {
@@ -75,6 +85,13 @@ class BaseXmlDataModel:
             return dom.toprettyxml(encoding='utf-8').decode()
         else:
             return raw_str
+
+    def load_data(self):
+        """Load data from the file"""
+        if self.file_path is not None and not self.is_data_loaded:
+            reloaded = BaseXmlDataModel.from_xml_file(self.file_path, load_data=True)
+            self.__dict__ = reloaded.__dict__.copy()
+            logger.info(f'Loaded model from file: {self.file_path}')
 
 
 def _target_from_xml(tag: ET.Element) -> Target:

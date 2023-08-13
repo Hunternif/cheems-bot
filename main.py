@@ -15,7 +15,7 @@ from cheems.proactive_markov_cog import ProactiveMarkovCog
 from cheems.proactive_react_cog import ProactiveReactCog
 
 logger = logging.getLogger('cheems')
-models_xml.load_models()
+models_xml.preload_models()
 
 intents = Intents.default()
 intents.messages = True
