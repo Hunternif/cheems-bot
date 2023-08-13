@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class XmlModel(Model):
+class XmlModel(Model, BaseXmlDataModel):
     """
     Markov chain model which is serialized specifically to a XML file.
     """
@@ -26,7 +26,7 @@ class XmlModel(Model):
     def from_base_model(cls, xml_model: BaseXmlDataModel) -> 'XmlModel':
         data = Model.parse_data(xml_model.raw_data)
         fields = xml_model.__dict__.copy()
-        del fields['raw_data']
+        fields['raw_data'] = ''  # delete the raw string to save memory
         return cls(**fields, data=data)
 
     @classmethod
@@ -42,11 +42,8 @@ class XmlModel(Model):
         xml_model = BaseXmlDataModel.from_xml(xml_str)
         return XmlModel.from_base_model(xml_model)
 
-    def to_base_model(self) -> BaseXmlDataModel:
-        raw_data = self.serialize_data()
-        fields = self.__dict__.copy()
-        del fields['data']
-        return BaseXmlDataModel(**fields, raw_data=raw_data)
-
     def to_xml(self, pretty_print: bool = True) -> str:
-        return self.to_base_model().to_xml(pretty_print)
+        self.raw_data = self.serialize_data()
+        output = super().to_xml(pretty_print)
+        self.raw_data = ''  # delete the raw string to save memory
+        return output
