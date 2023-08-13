@@ -6,6 +6,7 @@ from discord.ext.commands import Bot
 
 from cheems.config import config, is_name_allowed
 from cheems.discord_helper import map_message
+from cheems.reaction import reactions
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class ProactiveReactCog(commands.Cog):
         self.bot = bot
         self.messagesSinceBotByChannel: dict[int, int] = {}
         self.config = config.get('proactive_react', {})
-        self.period_msgs = self.config.get('period_msgs', 100)
+        self.period_msgs = int(self.config.get('period_msgs', 100))
 
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
@@ -38,7 +39,7 @@ class ProactiveReactCog(commands.Cog):
             if count >= self.period_msgs:
                 self.messagesSinceBotByChannel[msg.channel.id] = 0
                 logger.info(f'Proactively reacting to message: {msg.system_content}')
-                # TODO: respond with emoji
+                await react_to(msg)
 
     def _is_channel_allowed(self, msg: Message):
         m = map_message(msg)
@@ -47,3 +48,19 @@ class ProactiveReactCog(commands.Cog):
             return False
         channel_config = server_config.get('channels', {})
         return is_name_allowed(channel_config, m.channel.name)
+
+
+async def react_to(msg: Message):
+    """
+    React to the message using the server's model.
+    """
+    m = map_message(msg)
+    if m.server is None:
+        return  # can't reply outside of server
+    target = m.server
+    model = reactions.get_model(target)
+    if model is None:
+        logger.info(f'No reaction model for target {target}')
+        return
+    reaction = model.get_random_reaction()
+    await msg.add_reaction(reaction)

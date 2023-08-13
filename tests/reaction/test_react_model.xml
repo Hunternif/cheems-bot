@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<model
+        format_version="1"
+        from_time="2022-04-01 00:00:00"
+        to_time="2022-05-15 00:00:00"
+        updated_time="2022-05-15 00:00:00"
+>
+    <target type="User">
+        <id>9999</id>
+        <name>Hunternif</name>
+        <discriminator>8888</discriminator>
+        <server>
+            <id>12345</id>
+            <name>Test server</name>
+        </server>
+    </target>
+    <description>Hunternif's test reaction data</description>
+    <data><![CDATA[
+🤔 2
+👍 1
+]]></data>
+</model>

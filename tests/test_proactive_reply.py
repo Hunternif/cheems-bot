@@ -52,7 +52,6 @@ servers:
 
         msg = _make_msg()
         await cog.on_message(msg)
-        await reply_back(msg)
         reply_mock_fn.assert_called_with(msg, use_channel=True)
 
         reply_mock_fn.reset_mock()

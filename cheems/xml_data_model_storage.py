@@ -68,9 +68,9 @@ class XmlDataModelStorage(Generic[T]):
                     except Exception:
                         logger.exception(f'Failed to load model {filename}')
         if load_data:
-            logger.info(f'Loaded {len(self.models)} XMl models')
+            logger.info(f'Loaded {len(self.models)} XMl models from {self.root_dir}')
         else:
-            logger.info(f'Preloaded {len(self.models)} XMl models')
+            logger.info(f'Preloaded {len(self.models)} XMl models from {self.root_dir}')
 
     def save_model(self, xml_model: T):
         """
