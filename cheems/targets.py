@@ -19,6 +19,12 @@ class Target:
     def server_id(self) -> int:
         return self.server.id if hasattr(self, 'server') else 0
 
+    @property
+    def key(self) -> any:
+        if hasattr(self, 'id'):
+            return self.id
+        return self
+
 
 @dataclass(frozen=True)
 class Server(Target):

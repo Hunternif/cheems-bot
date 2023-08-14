@@ -63,7 +63,7 @@ def extract_target(ctx: DiscordContext) -> Target:
     #     # assuming the first word is the command,
     #     # and the 1st argument is the mention
     #     maybe_mention = _simplify_word(words[1])
-    #     for target in models_xml.models_by_server_id.get(server.id, {}).keys():
+    #     for target.key in models_xml.models_by_server_id.get(server.id, {}).keys():
     #         if hasattr(target, 'name'):
     #             target_name = _simplify_word(target.name)
     #             if target_name == maybe_mention:

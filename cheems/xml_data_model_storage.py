@@ -19,7 +19,10 @@ class XmlDataModelStorage(Generic[T]):
     """
     root_dir: str
 
-    ModelsByTarget = Dict[Target, T]
+    ModelsByTarget = Dict[any, T]
+    '''
+    Mapped by target's key. This helps with user id's after the discord names update.
+    '''
     ModelsByServer = Dict[int, ModelsByTarget]
 
     # models are mapped by server id and then by target id
@@ -35,7 +38,7 @@ class XmlDataModelStorage(Generic[T]):
         self.models.append(m)
         self.models_by_server_id.setdefault(m.server_id, {})
         models_by_target = self.models_by_server_id[m.server_id]
-        models_by_target[m.target] = m
+        models_by_target[m.target.key] = m
 
     def ensure_type(self, base: BaseXmlDataModel) -> T:
         return base
@@ -141,9 +144,9 @@ class XmlDataModelStorage(Generic[T]):
         if target.server_id not in self.models_by_server_id:
             return None
         models_by_target = self.models_by_server_id[target.server_id]
-        if target not in models_by_target:
+        if target.key not in models_by_target:
             return None
-        m = models_by_target[target]
+        m = models_by_target[target.key]
         if not m.is_data_loaded:
             m.load_data()
         return m

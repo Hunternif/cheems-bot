@@ -101,7 +101,7 @@ class TestMarkovModelsXml(TestCase):
         self.assertIsNone(models_xml.get_model(user1))
 
         models_xml.preload_models()
-        m2 = models_xml.markov_storage.models_by_server_id[server1.id][user1]
+        m2 = models_xml.markov_storage.models_by_server_id[server1.id][user1.key]
         self.assertIsNotNone(m2)
         self.assertEqual(False, m2.is_data_loaded)
         self.assertEqual('', m2.raw_data)
