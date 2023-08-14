@@ -10,6 +10,7 @@ markov_model_max_weight: 50
 
 proactive_reply:
   # Number of messages until the next proactive reply:
+  # todo: per-server based configs
   period_msgs: 2
   servers:
     My server name:
@@ -26,6 +27,7 @@ reaction_model_max_weight: 50
 
 proactive_react:
   # Number of messages until the next proactive reaction:
+  # todo: per-server based configs
   period_msgs: 2
   servers:
     My server name:

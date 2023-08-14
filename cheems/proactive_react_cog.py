@@ -39,7 +39,7 @@ class ProactiveReactCog(commands.Cog):
             if count >= self.period_msgs:
                 self.messagesSinceBotByChannel[msg.channel.id] = 0
                 logger.info(f'Proactively reacting to message: {msg.system_content}')
-                await react_to(msg)
+                await react_to(msg, use_channel=True)
 
     def _is_channel_allowed(self, msg: Message):
         m = map_message(msg)
@@ -50,7 +50,7 @@ class ProactiveReactCog(commands.Cog):
         return is_name_allowed(channel_config, m.channel.name)
 
 
-async def react_to(msg: Message):
+async def react_to(msg: Message, use_channel: bool = True):
     """
     React to the message using the server's model.
     """
@@ -58,6 +58,11 @@ async def react_to(msg: Message):
     if m.server is None:
         return  # can't reply outside of server
     target = m.server
+    if use_channel:
+        channel_model = reactions.get_model(m.channel)
+        if channel_model is not None:
+            target = m.channel
+
     model = reactions.get_model(target)
     if model is None:
         logger.info(f'No reaction model for target {target}')
