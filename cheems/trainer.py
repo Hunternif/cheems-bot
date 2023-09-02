@@ -65,17 +65,19 @@ class CheemsTrainer:
         :return: the number of messages fetched
         """
         ch = map_channel(discord_channel)
-        ch_model = models_xml.get_or_create_model(ch)
-        server_model = models_xml.get_or_create_model(ch.server)
 
         # check blocklists and allowlists in config:
-        server_config = config.get('training', {}).get('servers', {}).get(ch.server.name, {})
+        server_config = config.get('training', {}).get('servers', {}).get(ch.server.name, None)
+        if server_config is None:
+            return 0
         channel_config = server_config.get('channels', {})
         user_config = server_config.get('users', {})
         if not is_name_allowed(channel_config, ch.name):
             return 0
         channel_is_special = is_name_special(channel_config, ch.name)
 
+        ch_model = models_xml.get_or_create_model(ch)
+        server_model = models_xml.get_or_create_model(ch.server)
         count = 0
         try:
             history = discord_channel.history(

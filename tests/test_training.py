@@ -1,4 +1,6 @@
 from datetime import datetime, timezone, timedelta
+from importlib import reload
+from tempfile import TemporaryDirectory
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import Mock
 
@@ -10,32 +12,58 @@ from cheems.markov import models_xml
 from cheems.trainer import CheemsTrainer
 
 # test data: Discord objects
+d_bot_user = Mock()
 d_bot = Mock()
 d_user1 = Mock()
-d_bot_user = Mock()
-d_channel = Mock()
-d_server = Mock()
+d_bad_user = Mock()
+
+d_my_server = Mock()
+d_lucky_channel = Mock()
+
+d_my_other_server = Mock()
+d_general_channel = Mock()
+
+d_banned_server = Mock()
+d_banned_channel = Mock()
+
+d_other_server_2 = Mock()
+d_other_channel_2 = Mock()
+
+today = datetime.now(tz=timezone.utc)
+yesterday = today - timedelta(days=1)
 
 
-def _make_msg(author: any = d_user1, channel: any = d_channel,
-              content: str = 'hello world', time: datetime = None):
-    if not time:
-        time = datetime.now(tz=timezone.utc)
+def _make_msg(author: any = d_user1, channel: any = d_lucky_channel,
+              content: str = 'hello world', time: datetime = today):
     return Mock(
-        guild=d_server, author=author, channel=channel,
+        guild=d_lucky_channel.guild, author=author, channel=channel,
         system_content=content, created_at=time, attachments=[]
     )
 
 
 class TestTraining(IsolatedAsyncioTestCase):
-    @classmethod
-    def setUpClass(cls):
-        d_bot_user.configure_mock(id=100, bot=True)
-        d_user1.configure_mock(id=123, name='Kagamin', discriminator=1111, bot=False)
-        d_channel.configure_mock(id=200, name='lucky_channel', guild=d_server)
-        d_server.configure_mock(id=789, name='My server', me=d_bot_user)
+    temp_dir: TemporaryDirectory
 
-    async def test_training_allowlist(self):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.temp_dir = TemporaryDirectory()
+        config['markov_model_dir'] = cls.temp_dir.name
+
+        d_bot_user.configure_mock(id=100, bot=True)
+        d_bot.configure_mock(user=d_bot_user)
+        d_user1.configure_mock(id=123, name='Kagamin', discriminator=1111, bot=False)
+        d_bad_user.configure_mock(id=124, name='Konata', discriminator=1112, bot=False)
+
+        d_my_server.configure_mock(id=789, name='My server', me=d_bot_user)
+        d_my_other_server.configure_mock(id=790, name='My other server', me=d_bot_user)
+        d_banned_server.configure_mock(id=791, name='Banned server', me=d_bot_user)
+        d_other_server_2.configure_mock(id=792, name='Other server', me=d_bot_user)
+
+        d_lucky_channel.configure_mock(id=200, name='lucky_channel', guild=d_my_server)
+        d_general_channel.configure_mock(id=201, name='general', guild=d_my_other_server)
+        d_banned_channel.configure_mock(id=202, name='general', guild=d_banned_server)
+        d_other_channel_2.configure_mock(id=203, name='general', guild=d_other_server_2)
+
         config['training'] = yaml.load('''
 message_limit: 100
 wait_sec: 1
@@ -66,21 +94,100 @@ servers:
       allowlist:
         -
         ''', yaml.BaseLoader)
+
+    def setUp(self) -> None:
+        # Reload models_xml.py because the directory in the config changed,
+        # and to clean old references to saved models
+        self.__class__.temp_dir.cleanup()
+        reload(models_xml)
+        models_xml.preload_models()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.temp_dir.cleanup()
+
+    async def test_basic_training(self):
         self.assertEqual(100, int(config['training']['message_limit']))
         self.assertEqual(1, int(config['training']['wait_sec']))
 
-        msg = _make_msg(content='hello world')
+        set_messages([
+            _make_msg(content='hello world'),
+            _make_msg(content='hello world'),
+            _make_msg(content='hello baby'),
+        ])
 
+        trainer = CheemsTrainer(d_bot)
+        await trainer.update_models_from_channel(d_lucky_channel, yesterday)
+
+        self.assertEqual('''
+baby . 1
+hello baby 1
+hello world 2
+world . 2
+        '''.strip(), get_model_data(d_lucky_channel))
+
+    async def test_training_multiple_servers(self):
+        set_messages([
+            _make_msg(content='hello world', channel=d_lucky_channel),
+            _make_msg(content='hello general', channel=d_general_channel),
+            _make_msg(content='hello baby', channel=d_lucky_channel),
+        ])
+
+        trainer = CheemsTrainer(d_bot)
+        await trainer.update_models_from_channel(d_lucky_channel, yesterday)
+        await trainer.update_models_from_channel(d_general_channel, yesterday)
+
+        self.assertEqual('''
+baby . 1
+hello baby 1
+hello world 1
+world . 1
+        '''.strip(), get_model_data(d_lucky_channel))
+        self.assertEqual('''
+general . 1
+hello general 1
+        '''.strip(), get_model_data(d_general_channel))
+
+    async def test_banned_server(self):
+        set_messages([
+            _make_msg(content='hello world', channel=d_banned_channel),
+        ])
+
+        trainer = CheemsTrainer(d_bot)
+        await trainer.update_models_from_channel(d_banned_channel, yesterday)
+
+        self.assertIsNone(models_xml.get_model(d_banned_channel))
+
+    async def test_unlisted_server(self):
+        set_messages([
+            _make_msg(content='hello world', channel=d_other_channel_2),
+        ])
+
+        trainer = CheemsTrainer(d_bot)
+        await trainer.update_models_from_channel(d_other_channel_2, yesterday)
+
+        self.assertIsNone(models_xml.get_model(d_other_channel_2))
+
+
+def set_messages(msgs: list[any]):
+    """Queues up the messages so that they can be read from their channel's history"""
+    channels = {}
+    for msg in msgs:
+        channel_history = channels.get(msg.channel, [])
+        channel_history.append(msg)
+        channels[msg.channel] = channel_history
+
+    def create_history_function(msg_list: list[any]):
         async def get_history(limit, after, oldest_first):
-            yield msg
+            for m in msg_list:
+                yield m
+        return get_history
 
-        d_channel.configure_mock(history=get_history)
-        time = datetime.now(tz=timezone.utc) - timedelta(days=1)
+    for channel, msg_list in channels.items():
+        channel.configure_mock(history=create_history_function(msg_list))
 
-        trainer = CheemsTrainer(Mock(user=d_bot))
-        await trainer.update_models_from_channel(d_channel, time)
 
-        ch = map_channel(d_channel)
-        model = models_xml.get_or_create_model(ch)
-        model_data = model.serialize_data()
-        self.assertEqual('hello world 1\nworld . 1', model_data)
+def get_model_data(channel: any) -> str:
+    model = models_xml.get_model(map_channel(channel))
+    return model.serialize_data()
+
