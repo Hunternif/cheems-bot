@@ -6,7 +6,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from cheems import pictures
-from cheems.pictures import Picture
+from cheems.targets import Picture
 
 pic1 = Picture(
     id=982459577612238869,

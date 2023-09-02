@@ -6,8 +6,7 @@ from discord.ext.commands import Bot, Context
 
 from cheems import pictures
 from cheems.discord_helper import extract_target, get_command_argument, remove_mention
-from cheems.pictures import Picture
-from cheems.targets import User, Channel, Server
+from cheems.targets import User, Channel, Server, Picture
 
 logger = logging.getLogger(__name__)
 

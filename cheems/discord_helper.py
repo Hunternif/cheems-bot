@@ -7,8 +7,7 @@ from discord.ext.commands.context import Context as DiscordContext, Context
 from discord.user import BaseUser
 
 from cheems.config import is_channel_sfw
-from cheems.pictures import Picture
-from cheems.targets import Server, Target, User, Channel, Message
+from cheems.targets import Server, Target, User, Channel, Message, Picture
 
 # Discord epoch time
 EPOCH = datetime(year=2015, month=1, day=1, tzinfo=timezone.utc)

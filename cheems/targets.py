@@ -2,8 +2,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
-from cheems.pictures import Picture
-
 
 # Domain classes for modelling Discord interactions
 
@@ -67,6 +65,31 @@ class Topic(Target):
     name: str
     server: Optional[Server]
     keywords: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class Picture:
+    """
+    Data about a picture uploaded to Discord
+    """
+    # todo: use sqlalchemy ORM, replace *_id columns with foreign keys
+    id: int
+    url: str
+    msg: str  # message in the post with the picture, if any
+    time: datetime
+    uploader_id: int
+    channel_id: int
+    server_id: int
+    sfw: bool
+
+    # no idea why this is not working by default
+    def __eq__(self, other):
+        if not isinstance(other, Picture):
+            return False
+        return self.id == other.id and self.url == other.url and self.msg == other.msg and \
+               self.time == other.time and self.uploader_id == other.uploader_id and \
+               self.channel_id == other.channel_id and self.server_id == other.server_id and \
+               self.sfw == other.sfw
 
 
 @dataclass
