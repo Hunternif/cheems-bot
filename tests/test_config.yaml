@@ -1,0 +1,67 @@
+# Copy this file to config.yaml in the production environment
+discord_token: 'REPLACE_ME'
+markov_model_dir: ~/test_markov_models
+db_dir: ./test_markov_models
+markov_retry_limit: 5
+
+# maximum weight assigned to a word pair.
+# this trims outliers with huge weights, like bot messages.
+markov_model_max_weight: 50
+
+proactive_reply:
+  # Number of messages until the next proactive reply:
+  # todo: per-server based configs
+  period_msgs: 2
+  servers:
+    My server name:
+      channels:
+        allowlist:
+          - bot_testing
+
+
+reaction_model_dir: ./test_react_models
+
+# maximum weight assigned to a reaction.
+# this trims outliers with huge weights.
+reaction_model_max_weight: 50
+
+proactive_react:
+  # Number of messages until the next proactive reaction:
+  # todo: per-server based configs
+  period_msgs: 2
+  servers:
+    My server name:
+      channels:
+        blocklist:
+          -
+
+
+training:
+  message_limit: 100
+  wait_sec: 1
+  servers:
+    My server name:
+      channels:
+        blocklist:
+          - bot_testing
+          - bot_testing2
+        nsfw:
+          - nsfw_channel
+        special:
+          - deer-gacha
+      users:
+        special:
+          - my_bot
+      bad_msg:
+        - 1024851143001641020
+    My other server name:
+      channels:
+        allowlist:
+          - general
+      users:
+        blocklist:
+          - BadGuy
+    Banned server:
+      channels:
+        allowlist:
+          -
