@@ -4,14 +4,14 @@ from tempfile import TemporaryDirectory
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import Mock
 
-import yaml
-
 from cheems.config import config
 from cheems.discord_helper import map_channel
 from cheems.markov import models_xml
 from cheems.trainer import CheemsTrainer
 
 # test data: Discord objects
+from tests import override_test_config
+
 d_bot_user = Mock()
 d_bot = Mock()
 d_user1 = Mock()
@@ -47,7 +47,7 @@ class TestTraining(IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.temp_dir = TemporaryDirectory()
-        config['markov_model_dir'] = cls.temp_dir.name
+        override_test_config(f'markov_moodel_dir: {cls.temp_dir.name}')
 
         d_bot_user.configure_mock(id=100, bot=True)
         d_bot.configure_mock(user=d_bot_user, guilds=[
@@ -66,36 +66,37 @@ class TestTraining(IsolatedAsyncioTestCase):
         d_banned_channel.configure_mock(id=202, name='general', guild=d_banned_server)
         d_other_channel_2.configure_mock(id=203, name='general', guild=d_other_server_2)
 
-        config['training'] = yaml.load('''
-message_limit: 100
-wait_sec: 0
-servers:
-  My server:
-    channels:
-      blocklist:
-        - bot_testing
-        - bot_testing2
-      nsfw:
-        - nsfw_channel
-      special:
-        - deer-gacha
-    users:
-      special:
-        - my_bot
-    bad_msg:
-      - 1024851143001641020
-  My other server:
-    channels:
-      allowlist:
-        - general
-    users:
-      blocklist:
-        - BadGuy
-  Banned server:
-    channels:
-      allowlist:
-        -
-        ''', yaml.BaseLoader)
+        override_test_config('''
+training:
+  message_limit: 100
+  wait_sec: 0
+  servers:
+    My server:
+      channels:
+        blocklist:
+          - bot_testing
+          - bot_testing2
+        nsfw:
+          - nsfw_channel
+        special:
+          - deer-gacha
+      users:
+        special:
+          - my_bot
+      bad_msg:
+        - 1024851143001641020
+    My other server:
+      channels:
+        allowlist:
+          - general
+      users:
+        blocklist:
+          - BadGuy
+    Banned server:
+      channels:
+        allowlist:
+          -
+        ''')
 
     def setUp(self) -> None:
         # Reload models_xml.py because the directory in the config changed,

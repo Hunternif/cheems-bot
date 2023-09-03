@@ -2,13 +2,12 @@ from datetime import datetime, timezone
 from unittest import mock, IsolatedAsyncioTestCase
 from unittest.mock import Mock, AsyncMock
 
-import yaml
-
-from cheems.config import config
 from cheems.markov_cog import reply_back
 from cheems.proactive_markov_cog import ProactiveMarkovCog
 
 # test data: Discord objects
+from tests import override_test_config
+
 d_bot = Mock()
 d_user1 = Mock()
 d_bot_user = Mock()
@@ -34,14 +33,15 @@ class TestProactiveReply(IsolatedAsyncioTestCase):
 
     @mock.patch('cheems.proactive_markov_cog.reply_back')
     async def test_reply_after_period(self, reply_mock_fn: AsyncMock) -> None:
-        config['proactive_reply'] = yaml.load('''
-period_msgs: 3
-servers:
-  My server:
-    channels:
-      allowlist:
-        - Lucky channel
-        ''', yaml.BaseLoader)
+        override_test_config('''
+proactive_reply:
+  period_msgs: 3
+  servers:
+    My server:
+      channels:
+        allowlist:
+          - Lucky channel
+        ''')
         cog = ProactiveMarkovCog(Mock(user=d_bot))
 
         await cog.on_message(_make_msg())
@@ -60,14 +60,15 @@ servers:
 
     @mock.patch('cheems.proactive_markov_cog.reply_back')
     async def test_reply_no_period(self, reply_mock_fn: AsyncMock) -> None:
-        config['proactive_reply'] = yaml.load('''
-period_msgs: 0
-servers:
-  My server:
-    channels:
-      allowlist:
-        - Lucky channel
-        ''', yaml.BaseLoader)
+        override_test_config('''
+proactive_reply:
+  period_msgs: 0
+  servers:
+    My server:
+      channels:
+        allowlist:
+          - Lucky channel
+        ''')
         cog = ProactiveMarkovCog(Mock(user=d_bot))
 
         msg = _make_msg()
@@ -82,11 +83,12 @@ servers:
 
     @mock.patch('cheems.proactive_markov_cog.reply_back')
     async def test_reply_blocked_server(self, reply_mock_fn: AsyncMock) -> None:
-        config['proactive_reply'] = yaml.load('''
-period_msgs: 0
-servers:
-  Other server:
-        ''', yaml.BaseLoader)
+        override_test_config('''
+proactive_reply:
+  period_msgs: 0
+  servers:
+    Other server:
+        ''')
         cog = ProactiveMarkovCog(Mock(user=d_bot))
 
         await cog.on_message(_make_msg())
@@ -94,14 +96,15 @@ servers:
 
     @mock.patch('cheems.proactive_markov_cog.reply_back')
     async def test_reply_blocked_channel(self, reply_mock_fn: AsyncMock) -> None:
-        config['proactive_reply'] = yaml.load('''
-period_msgs: 0
-servers:
-  My server:
-    channels:
-      allowlist:
-        -
-        ''', yaml.BaseLoader)
+        override_test_config('''
+proactive_reply:
+  period_msgs: 0
+  servers:
+    My server:
+      channels:
+        allowlist:
+          -
+        ''')
         cog = ProactiveMarkovCog(Mock(user=d_bot))
 
         await cog.on_message(_make_msg())

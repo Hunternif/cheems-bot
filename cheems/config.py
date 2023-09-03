@@ -3,6 +3,8 @@ import sys
 
 import yaml
 
+from cheems.targets import Target, Server, Channel, User, Message
+
 # Logger config
 root = logging.getLogger()
 root.setLevel(logging.INFO)
@@ -62,14 +64,68 @@ def is_channel_sfw(server_name: str, channel_name: str) -> bool:
     return True
 
 
-config = {}
+class CheemsConfig:
+    """
+    The default implementation uses the YAML config file.
+    """
+    inner_dict: dict = {}
+
+    def read_dict(self, new_dict: dict):
+        self.inner_dict.update(new_dict)
+
+    def is_feature_allowed(self, feature: str, target: Target = None) -> bool:
+        """Returns true if the feature is allowed in this target"""
+        if target is None:
+            # no target given, just check that the feature name is present:
+            return feature in self.inner_dict
+
+        try:
+            feature_config = self.inner_dict.get(feature)
+            servers = feature_config.get('servers', {})
+
+            if isinstance(target, Server):
+                return target.name in servers
+
+            if isinstance(target, Channel):
+                server_config = servers.get(target.server.name)
+                channel_config = server_config.get('channels', {})
+                return is_name_allowed(channel_config, target.name)
+
+            if isinstance(target, User):
+                server_config = servers.get(target.server.name)
+                user_config = server_config.get('users', {})
+                return is_name_allowed(user_config, target.name)
+
+            if isinstance(target, Message):
+                server_config = servers.get(target.server.name)
+                channel_config = server_config.get('channels', {})
+                user_config = server_config.get('users', {})
+                # TODO: check if message id is in 'bad_msg'?
+                return is_name_allowed(channel_config, target.channel.name) and \
+                        is_name_allowed(user_config, target.user.name)
+        except Exception:
+            return False
+
+    def get(self, key: str, default: any = None, target: Target = None) -> any:
+        """Returns the value for key, given the current target"""
+        return self.inner_dict[key]
+
+    def __getitem__(self, item) -> any:
+        return self.get(item)
+
+
+config: CheemsConfig = CheemsConfig()
 """
 This config is imported in many modules, and is meant to be read-only.
 Might be an anti-pattern.
 """
 
-try:
-    with open('config.yaml', 'r', encoding='utf-8') as f:
-        config = yaml.safe_load(f)
-except Exception:
-    logger.exception("Couldn't read config.yaml")
+
+def load_config(path: str):
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            yaml_content = yaml.safe_load(f)
+            config.read_dict(yaml_content)
+    except Exception as e:
+        logger.exception("Couldn't read config.yaml")
+        raise e

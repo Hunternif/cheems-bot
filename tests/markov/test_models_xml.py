@@ -3,12 +3,13 @@ from importlib import reload
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from cheems.config import config
 from cheems.markov import models_xml
 from cheems.markov.model_xml import XmlModel
 from cheems.targets import User, Server, Channel
 
 # test data
+from tests import override_test_config
+
 server1 = Server(100, 'London')
 server2 = Server(200, 'Oxford')
 channel1 = Channel(101, 'Lucky channel', server1)
@@ -22,7 +23,7 @@ class TestMarkovModelsXml(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.temp_dir = TemporaryDirectory()
-        config['markov_model_dir'] = cls.temp_dir.name
+        override_test_config(f'markov_model_dir: {cls.temp_dir.name}')
 
     def setUp(self) -> None:
         # Reload models_xml.py because the directory in the config changed,

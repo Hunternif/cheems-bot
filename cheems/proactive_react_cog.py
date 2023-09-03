@@ -4,7 +4,7 @@ from discord import Message
 from discord.ext import commands
 from discord.ext.commands import Bot
 
-from cheems.config import config, is_name_allowed
+from cheems.config import config
 from cheems.discord_helper import map_message
 from cheems.reaction import reactions
 
@@ -31,7 +31,8 @@ class ProactiveReactCog(commands.Cog):
         if msg.author.id == self.bot.user.id:
             self.messagesSinceBotByChannel[msg.channel.id] = 0
         else:
-            if not self._is_channel_allowed(msg):
+            m = map_message(msg)
+            if not config.is_feature_allowed('proactive_react', m.channel):
                 return
             count = self.messagesSinceBotByChannel.get(msg.channel.id, 0)
             count += 1
@@ -40,14 +41,6 @@ class ProactiveReactCog(commands.Cog):
                 self.messagesSinceBotByChannel[msg.channel.id] = 0
                 logger.info(f'Proactively reacting to message: {msg.system_content}')
                 await react_to(msg, use_channel=True)
-
-    def _is_channel_allowed(self, msg: Message):
-        m = map_message(msg)
-        server_config = self.config.get('servers', {}).get(m.server.name, None)
-        if server_config is None:
-            return False
-        channel_config = server_config.get('channels', {})
-        return is_name_allowed(channel_config, m.channel.name)
 
 
 async def react_to(msg: Message, use_channel: bool = True):

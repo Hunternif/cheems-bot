@@ -2,13 +2,11 @@ from datetime import datetime, timezone
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import Mock, AsyncMock
 
-import yaml
-
-from cheems.config import config
 from cheems.proactive_react_cog import ProactiveReactCog
 # test data: Discord objects
 from cheems.reaction import reactions
 from cheems.targets import Server
+from tests import override_test_config
 
 d_bot = Mock()
 d_user1 = Mock()
@@ -37,14 +35,15 @@ class TestProactiveReact(IsolatedAsyncioTestCase):
         model.data = {'reaction': 1}
 
     async def test_reply_after_period(self):
-        config['proactive_react'] = yaml.load('''
-period_msgs: 3
-servers:
-  My server:
-    channels:
-      allowlist:
-        - Lucky channel
-        ''', yaml.BaseLoader)
+        override_test_config('''
+proactive_react:
+  period_msgs: 3
+  servers:
+    My server:
+      channels:
+        allowlist:
+          - Lucky channel
+        ''')
         cog = ProactiveReactCog(Mock(user=d_bot))
 
         msg = _make_msg()
@@ -64,14 +63,15 @@ servers:
         msg.add_reaction.assert_not_called()
 
     async def test_reply_no_period(self):
-        config['proactive_react'] = yaml.load('''
-period_msgs: 0
-servers:
-  My server:
-    channels:
-      allowlist:
-        - Lucky channel
-        ''', yaml.BaseLoader)
+        override_test_config('''
+proactive_react:
+  period_msgs: 0
+  servers:
+    My server:
+      channels:
+        allowlist:
+          - Lucky channel
+        ''')
         cog = ProactiveReactCog(Mock(user=d_bot))
 
         msg = _make_msg()
@@ -83,11 +83,12 @@ servers:
         msg.add_reaction.assert_called_with('reaction')
 
     async def test_reply_blocked_server(self):
-        config['proactive_react'] = yaml.load('''
-period_msgs: 0
-servers:
-  Other server:
-        ''', yaml.BaseLoader)
+        override_test_config('''
+proactive_react:
+  period_msgs: 0
+  servers:
+    Other server:
+        ''')
         cog = ProactiveReactCog(Mock(user=d_bot))
 
         msg = _make_msg()
@@ -95,14 +96,15 @@ servers:
         msg.add_reaction.assert_not_called()
 
     async def test_reply_blocked_channel(self):
-        config['proactive_react'] = yaml.load('''
-period_msgs: 0
-servers:
-  My server:
-    channels:
-      allowlist:
-        -
-        ''', yaml.BaseLoader)
+        override_test_config('''
+proactive_react:
+  period_msgs: 0
+  servers:
+    My server:
+      channels:
+        allowlist:
+          -
+        ''')
         cog = ProactiveReactCog(Mock(user=d_bot))
 
         msg = _make_msg()

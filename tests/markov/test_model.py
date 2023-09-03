@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta, timezone
 from unittest import TestCase
 
-from cheems.config import config
 from cheems.markov.model import Model
 from cheems.targets import Target, Server
+from tests import override_test_config
 
 
 def create_test_model(
@@ -65,7 +65,7 @@ world . 1
 '''.strip(), data_str)
 
     def test_max_weight(self):
-        config['markov_model_max_weight'] = 2
+        override_test_config('markov_model_max_weight: 2')
         data = Model.parse_data('''
         hello world 1
         wow! amazing 3

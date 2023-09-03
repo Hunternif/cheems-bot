@@ -4,7 +4,7 @@ import logging
 from discord import Intents
 from discord.ext import commands
 
-from cheems.config import config
+from cheems.config import config, load_config
 from cheems.markov import models_xml
 from cheems.trainer import CheemsTrainer
 
@@ -26,6 +26,7 @@ async def on_ready():
 
 async def main():
     bot.remove_command('help')
+    load_config('config.yaml')
     async with bot:
         await bot.start(config['discord_token'])
 

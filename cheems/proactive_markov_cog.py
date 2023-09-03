@@ -4,7 +4,7 @@ from discord import Message
 from discord.ext import commands
 from discord.ext.commands import Bot
 
-from cheems.config import config, is_name_allowed
+from cheems.config import config
 from cheems.discord_helper import map_message
 from cheems.markov_cog import reply_back
 
@@ -27,7 +27,8 @@ class ProactiveMarkovCog(commands.Cog):
         if msg.author.id == self.bot.user.id:
             self.messagesSinceBotByChannel[msg.channel.id] = 0
         else:
-            if not self._is_channel_allowed(msg):
+            m = map_message(msg)
+            if not config.is_feature_allowed('proactive_reply', m.channel):
                 return
             count = self.messagesSinceBotByChannel.get(msg.channel.id, 0)
             count += 1
@@ -36,11 +37,3 @@ class ProactiveMarkovCog(commands.Cog):
                 self.messagesSinceBotByChannel[msg.channel.id] = 0
                 logger.info(f'Proactively replying to message: {msg.system_content}')
                 await reply_back(msg, use_channel=True)
-
-    def _is_channel_allowed(self, msg: Message):
-        m = map_message(msg)
-        server_config = self.config.get('servers', {}).get(m.server.name, None)
-        if server_config is None:
-            return False
-        channel_config = server_config.get('channels', {})
-        return is_name_allowed(channel_config, m.channel.name)
