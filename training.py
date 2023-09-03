@@ -21,7 +21,7 @@ trainer = CheemsTrainer(bot)
 @bot.event
 async def on_ready():
     logger.info(f'{bot.user} successfully logged in for training!')
-    await trainer.train()
+    trainer.begin_training()
 
 
 async def main():

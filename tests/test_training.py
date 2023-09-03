@@ -34,7 +34,7 @@ yesterday = today - timedelta(days=1)
 
 
 def _make_msg(author: any = d_user1, channel: any = d_lucky_channel,
-              content: str = 'hello world', time: datetime = today):
+              content: str = 'hello world', time: datetime = yesterday):
     return Mock(
         guild=d_lucky_channel.guild, author=author, channel=channel,
         system_content=content, created_at=time, attachments=[]
@@ -50,14 +50,16 @@ class TestTraining(IsolatedAsyncioTestCase):
         config['markov_model_dir'] = cls.temp_dir.name
 
         d_bot_user.configure_mock(id=100, bot=True)
-        d_bot.configure_mock(user=d_bot_user)
+        d_bot.configure_mock(user=d_bot_user, guilds=[
+            d_my_server, d_my_other_server, d_banned_server, d_other_server_2
+        ])
         d_user1.configure_mock(id=123, name='Kagamin', discriminator=1111, bot=False)
         d_bad_user.configure_mock(id=124, name='Konata', discriminator=1112, bot=False)
 
-        d_my_server.configure_mock(id=789, name='My server', me=d_bot_user)
-        d_my_other_server.configure_mock(id=790, name='My other server', me=d_bot_user)
-        d_banned_server.configure_mock(id=791, name='Banned server', me=d_bot_user)
-        d_other_server_2.configure_mock(id=792, name='Other server', me=d_bot_user)
+        d_my_server.configure_mock(id=789, name='My server', text_channels=[d_lucky_channel], me=d_bot_user)
+        d_my_other_server.configure_mock(id=790, name='My other server', text_channels=[d_general_channel], me=d_bot_user)
+        d_banned_server.configure_mock(id=791, name='Banned server', text_channels=[d_banned_channel], me=d_bot_user)
+        d_other_server_2.configure_mock(id=792, name='Other server', text_channels=[d_other_channel_2], me=d_bot_user)
 
         d_lucky_channel.configure_mock(id=200, name='lucky_channel', guild=d_my_server)
         d_general_channel.configure_mock(id=201, name='general', guild=d_my_other_server)
@@ -66,7 +68,7 @@ class TestTraining(IsolatedAsyncioTestCase):
 
         config['training'] = yaml.load('''
 message_limit: 100
-wait_sec: 1
+wait_sec: 0
 servers:
   My server:
     channels:
@@ -98,9 +100,8 @@ servers:
     def setUp(self) -> None:
         # Reload models_xml.py because the directory in the config changed,
         # and to clean old references to saved models
-        self.__class__.temp_dir.cleanup()
         reload(models_xml)
-        models_xml.preload_models()
+        reset_channels()
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -108,7 +109,7 @@ servers:
 
     async def test_basic_training(self):
         self.assertEqual(100, int(config['training']['message_limit']))
-        self.assertEqual(1, int(config['training']['wait_sec']))
+        self.assertEqual(0, int(config['training']['wait_sec']))
 
         set_messages([
             _make_msg(content='hello world'),
@@ -117,7 +118,8 @@ servers:
         ])
 
         trainer = CheemsTrainer(d_bot)
-        await trainer.update_models_from_channel(d_lucky_channel, yesterday)
+        trainer.begin_training()
+        await trainer.wait_for_completion()
 
         self.assertEqual('''
 baby . 1
@@ -125,6 +127,7 @@ hello baby 1
 hello world 2
 world . 2
         '''.strip(), get_model_data(d_lucky_channel))
+        self.assertIsNone(models_xml.get_model(d_general_channel))
 
     async def test_training_multiple_servers(self):
         set_messages([
@@ -181,13 +184,21 @@ def set_messages(msgs: list[any]):
         async def get_history(limit, after, oldest_first):
             for m in msg_list:
                 yield m
+            msg_list.clear()  # return no more messages after this
         return get_history
 
     for channel, msg_list in channels.items():
         channel.configure_mock(history=create_history_function(msg_list))
 
 
+def reset_channels():
+    async def empty_history(limit, after, oldest_first):
+        return
+        yield  # 'yield' makes it an async generator
+    for ch in [d_lucky_channel, d_general_channel, d_banned_channel, d_other_channel_2]:
+        ch.configure_mock(history=empty_history)
+
+
 def get_model_data(channel: any) -> str:
     model = models_xml.get_model(map_channel(channel))
     return model.serialize_data()
-

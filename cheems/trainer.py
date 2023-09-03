@@ -1,6 +1,8 @@
 import asyncio
 import logging
+from asyncio import AbstractEventLoop, Task
 from datetime import datetime, timedelta, timezone
+from typing import Coroutine, Optional
 
 from discord import TextChannel
 from discord.ext.commands import Bot
@@ -12,6 +14,7 @@ from cheems.discord_helper import map_channel, map_message, EPOCH
 from cheems.markov import models_xml
 from cheems.markov.markov import train_models_on_sentence
 from cheems.markov.model import Model
+from cheems.markov.model_xml import XmlModel
 from cheems.targets import Message
 
 logger = logging.getLogger('trainer')
@@ -19,23 +22,48 @@ logger = logging.getLogger('trainer')
 
 class CheemsTrainer:
     bot: Bot
-    save_period = timedelta(minutes=2)
-    unsaved_models = set()
+    loop: AbstractEventLoop
+    tasks: list[Task] = []
+
+    save_models_task: Optional[Task] = None
+    '''Saving models is a long operation, so it's scheduled rarely.
+    This task is updated whenever a save is scheduled.'''
+
+    # TODO: move save_period into config
+    save_period = timedelta(seconds=2)
+    unsaved_models: set[XmlModel] = set()
     unsaved_picture_count = 0
 
     def __init__(self, bot: Bot):
         self.bot = bot
+        self.loop = asyncio.get_running_loop()
 
-    async def train(self):
-        self.bot.loop.create_task(self._save_models_periodic())
+    def begin_training(self):
+        """
+        Main method. Starts scraping all servers according to the config.
+        """
         for guild in self.bot.guilds:
-            for discord_channel in guild.channels:
-                if isinstance(discord_channel, TextChannel):
-                    self.bot.loop.create_task(
-                        self.continuously_update_models_from_channel(discord_channel)
-                    )
+            for discord_channel in guild.text_channels:
+                self._add_task(
+                    self._continuously_update_models_from_channel(discord_channel)
+                )
 
-    async def continuously_update_models_from_channel(self, discord_channel: TextChannel):
+    async def wait_for_completion(self):
+        """
+        Waits until all ongoing tasks are completed, i.e. all servers and channels have been scraped.
+        """
+        await asyncio.wait(self.tasks)
+        # the save task could have been added later:
+        if self.save_models_task:
+            await asyncio.wait([self.save_models_task])
+        logger.info("Training complete")
+
+    def _add_task(self, coro: Coroutine) -> Task:
+        task = self.loop.create_task(coro)
+        self.tasks.append(task)
+        return task
+
+    async def _continuously_update_models_from_channel(self, discord_channel: TextChannel):
         """
         Recursively runs `update_models_from_channel` until there are no more messages
         """
@@ -45,13 +73,13 @@ class CheemsTrainer:
         # find the earliest time from which to update
         # TODO: is this time calculation correct, e.g. if I'm training deer-gacha separately?
         from_time = min(server_model.to_time, ch_model.to_time)
-        num_fetched = await asyncio.create_task(
+        num_fetched = await self._add_task(
             self.update_models_from_channel(discord_channel, from_time)
         )
         if num_fetched > 0:
-            await asyncio.sleep(config['training'].get('wait_sec', 0))
-            await asyncio.create_task(
-                self.continuously_update_models_from_channel(discord_channel)
+            await asyncio.sleep(int(config['training'].get('wait_sec', 0)))
+            await self._add_task(
+                self._continuously_update_models_from_channel(discord_channel)
             )
 
     async def update_models_from_channel(
@@ -81,7 +109,7 @@ class CheemsTrainer:
         count = 0
         try:
             history = discord_channel.history(
-                limit=config['training']['message_limit'],
+                limit=int(config['training']['message_limit']),
                 after=from_time,
                 oldest_first=True,
             )
@@ -118,11 +146,13 @@ class CheemsTrainer:
             logger.exception(f'Error parsing channel {ch}: {e}')
             return count
         if count > 0:
+            self.schedule_save_all_models()
             logger.info(f'Fetched {count} messages from {ch}')
         else:
             logger.info(f'Finished fetching {ch.name}')
-            models_xml.save_model(ch_model)
-            self.unsaved_models.discard(ch_model)
+            # TODO: figure out when all channels have been scraped, so that
+            #  we can save all models immediately
+            self.save_model(ch_model)
         return count
 
     def train_models(self, models: list[Model], msg: Message):
@@ -145,15 +175,18 @@ class CheemsTrainer:
             pictures.save_pic(p)
             self.unsaved_picture_count += 1
 
-    async def _save_models_periodic(self):
-        """save all unsaved models periodically."""
-        while True:
-            await asyncio.sleep(self.save_period.seconds)
-            logger.info('Saving all models...')
-            self._save_models()
+    def schedule_save_all_models(self, delay_seconds: int = None):
+        """Schedules saving all models, if it's not already scheduled."""
+        if self.save_models_task is not None:
+            return
+        self.save_models_task = self._add_task(self._save_all_models_delayed(delay_seconds))
 
-    def _save_models(self):
-        """save all unsaved models"""
+    async def _save_all_models_delayed(self, delay_seconds: int = None):
+        """save all unsaved models after a delay."""
+        if not delay_seconds:
+            delay_seconds = self.save_period.seconds
+        await asyncio.sleep(delay_seconds)
+        logger.info('Saving all models...')
         unsaved_count = len(self.unsaved_models)
         while len(self.unsaved_models) > 0:
             model = self.unsaved_models.pop()
@@ -162,3 +195,12 @@ class CheemsTrainer:
         pictures.save_all()
         logger.info(f'Saved {self.unsaved_picture_count} pictures')
         self.unsaved_picture_count = 0
+        self.save_models_task = None
+
+    def save_model(self, model: XmlModel):
+        logger.info(f'Saving model {model.file_path}')
+        models_xml.save_model(model)
+        self.unsaved_models.discard(model)
+        if len(self.unsaved_models) <= 0:
+            self.save_models_task.cancel()
+            self.save_models_task = None
