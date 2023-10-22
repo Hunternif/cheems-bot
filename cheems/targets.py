@@ -17,6 +17,12 @@ class Target:
     def server_id(self) -> int:
         return self.server.id if hasattr(self, 'server') else 0
 
+    def get_server(self) -> Optional['Server']:
+        return self.server if hasattr(self, 'server') else None
+
+    def get_channel(self) -> Optional['Channel']:
+        return self.channel if hasattr(self, 'channel') else None
+
     @property
     def key(self) -> any:
         if hasattr(self, 'id'):
@@ -31,6 +37,9 @@ class Server(Target):
 
     def __str__(self):
         return f'{self.name}'
+
+    def get_server(self) -> 'Server':
+        return self
 
 
 @dataclass(frozen=True)
@@ -54,6 +63,9 @@ class Channel(Target):
     def __str__(self):
         server_part = '' if self.server is None else f' on {self.server.name}'
         return f'#{self.name}{server_part}'
+
+    def get_channel(self) -> 'Channel':
+        return self
 
 
 @dataclass(frozen=True)
