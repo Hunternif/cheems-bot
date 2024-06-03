@@ -5,7 +5,7 @@ from discord import Intents
 from discord.ext.commands import Context
 
 from cheems.pics_cog import PicsCog
-from cheems.config import config, load_config
+from cheems.config import config
 from discord.ext import commands
 
 from cheems.help_cog import HelpCog
@@ -40,7 +40,6 @@ async def on_command_error(ctx: Context, error):
 
 async def main():
     bot.remove_command('help')
-    load_config('config.yaml')
     async with bot:
         await bot.add_cog(MarkovCog(bot))
         await bot.add_cog(ProactiveMarkovCog(bot))

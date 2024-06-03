@@ -102,7 +102,7 @@ class CheemsConfig:
                 user_config = server_config.get('users', {})
                 # TODO: check if message id is in 'bad_msg'?
                 return is_name_allowed(channel_config, target.channel.name) and \
-                        is_name_allowed(user_config, target.user.name)
+                       is_name_allowed(user_config, target.user.name)
         except Exception:
             return False
 
@@ -129,3 +129,7 @@ def load_config(path: str):
     except Exception as e:
         logger.exception("Couldn't read config.yaml")
         raise e
+
+
+# Auto-load config, because other modules importing 'config' depend on it being loaded
+load_config('config.yaml')
