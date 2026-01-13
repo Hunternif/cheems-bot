@@ -14,6 +14,7 @@ from cheems.markov_cog import MarkovCog
 from cheems.proactive_markov_cog import ProactiveMarkovCog
 from cheems.proactive_react_cog import ProactiveReactCog
 from cheems.reaction import reactions
+from cheems.speak_cog import SpeakCog
 
 logger = logging.getLogger('cheems')
 models_xml.preload_models()
@@ -46,6 +47,7 @@ async def main():
         await bot.add_cog(ProactiveReactCog(bot))
         await bot.add_cog(HelpCog(bot))
         await bot.add_cog(PicsCog(bot))
+        await bot.add_cog(SpeakCog(bot))
         await bot.start(config['discord_token'])
 
 
