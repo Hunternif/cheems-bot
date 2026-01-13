@@ -16,6 +16,16 @@
             "cwd": "${workspaceFolder}",
             "justMyCode": true,
             "python": "${workspaceFolder}/venv/Scripts/python.exe"
+        },
+        {
+            "name": "Run bot",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "main",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "justMyCode": true,
+            "python": "${workspaceFolder}/venv/Scripts/python.exe"
         }
     ]
 }
