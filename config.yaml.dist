@@ -25,6 +25,11 @@ reaction_model_dir: ./cheems_react_models
 # this trims outliers with huge weights.
 reaction_model_max_weight: 50
 
+speak:
+  # List of user names allowed to use the .speak command
+  allowed_users:
+    - your_username_here
+
 proactive_react:
   # Number of messages until the next proactive reaction:
   # todo: per-server based configs

@@ -5,6 +5,8 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Bot, Context
 
+from cheems.config import config
+
 logger = logging.getLogger(__name__)
 
 
@@ -15,6 +17,11 @@ class SpeakCog(commands.Cog):
     @commands.command()
     async def speak(self, ctx: Context):
         """`.speak #channel message` - Make the bot post your message to the specified channel."""
+        # Check if user is authorized
+        if not self._is_authorized(ctx):
+            logger.warning(f'{ctx.author.name} attempted to use .speak but is not authorized')
+            return
+        
         # Parse the channel from the message
         channel = await self._extract_channel(ctx)
         if channel is None:
@@ -82,3 +89,9 @@ class SpeakCog(commands.Cog):
         if len(parts) >= 3:
             return parts[2]
         return ""
+
+    def _is_authorized(self, ctx: Context) -> bool:
+        """Check if the user is authorized to use the speak command."""
+        allowed_users = config.get('speak', {}).get('allowed_users', [])
+        allowed_users_lower = [x.lower() for x in allowed_users]
+        return ctx.author.name.lower() in allowed_users_lower
