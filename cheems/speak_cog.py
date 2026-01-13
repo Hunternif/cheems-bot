@@ -18,7 +18,7 @@ class SpeakCog(commands.Cog):
         # Parse the channel from the message
         channel = await self._extract_channel(ctx)
         if channel is None:
-            await ctx.send("Please specify a valid channel, e.g. `.speak #channel-name your message here`")
+            # await ctx.send("Please specify a valid channel, e.g. `.speak #channel-name your message here`")
             return
 
         # Get the message content after the channel mention
@@ -26,7 +26,7 @@ class SpeakCog(commands.Cog):
         
         # Check if there's actually a message to send
         if not message_content and not ctx.message.attachments:
-            await ctx.send("Please provide a message to send!")
+            # await ctx.send("Please provide a message to send!")
             return
 
         try:
@@ -48,10 +48,10 @@ class SpeakCog(commands.Cog):
             logger.info(f'{ctx.author.name} made bot speak in #{channel.name}: {message_content}')
             
         except discord.Forbidden:
-            await ctx.send(f"I don't have permission to post in {channel.mention}")
+            # await ctx.send(f"I don't have permission to post in {channel.mention}")
             logger.warning(f'{ctx.author.name} tried to speak in #{channel.name} but bot lacks permissions')
         except Exception as e:
-            await ctx.send(f"Failed to send message: {e}")
+            # await ctx.send(f"Failed to send message: {e}")
             logger.error(f'Error sending message to #{channel.name}: {e}')
 
     async def _extract_channel(self, ctx: Context) -> Optional[discord.TextChannel]:
